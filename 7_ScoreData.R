@@ -87,11 +87,11 @@ return(element)
 my_market <- market_type_num(x = X)
 
 # test for all columns
-for (i in 1:28) {
-  thisPair <- Pairs[i]
-  df <- macd_100 %>% select(thisPair)
+for (PAIR in Pairs) {
+  df <- macd_100 %>% select(PAIR)
   my_market <- market_type_num(x = df) %>% as.data.frame()
-  write_csv(my_market, file.path(sbx, paste0(thisPair, ".csv")))
+  names(my_market) <- PAIR
+  write_csv(my_market, file.path(sbx, paste0(PAIR, ".csv")))
 }
 
 #my_markets <- apply(macd_100, MARGIN = 2, market_type_num)
