@@ -182,9 +182,15 @@ deepnet_model <- h2o.deeplearning(
 Any time need to make a pause?
 
 ```{r}
-h2o.shutdown(prompt = F)
+#h2o.shutdown(prompt = F)
 ```
 
+```{r}
+# check mse
+mod_error <- h2o.anomaly(deepnet_model, test_M4) %>% as.data.frame()
+
+mod_error
+```
 
 
 
