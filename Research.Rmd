@@ -48,25 +48,158 @@ We will extract only corresponding piece...
 
 ```{r}
 # extract approximate date and choose only relevant columns
-bull_volat <- prices %>% filter(X1 > "2017-11-05", X1 < "2017-11-25") %>% select(X1, X3)
+bull_norm <- prices %>% filter(X1 > "2017-11-05", X1 < "2017-11-25") %>% select(X1, X3)
 ```
 
 ... and visualize it to confirm 
 
 ```{r}
-ggplot(bull_volat, aes(X1, X3))+geom_line()
+ggplot(bull_norm, aes(X1, X3))+geom_line()
 ```
 
 next, we can extract corresponding piece of macd dataframe:
 
 ```{r}
-macd_bull_volat <- macd %>% select(X1, X3) %>% inner_join(bull_volat, by = c("X1" = "X1"))
+macd_bull_norm <- macd %>% select(X1, X3) %>% inner_join(bull_norm, by = c("X1" = "X1"))
 ```
 
 and visualize both things together
 
 ```{r}
-ggplot(macd_bull_volat, aes(X1, X3.y, col = X3.x))+geom_line()
+ggplot(macd_bull_norm, aes(X1, X3.y, col = X3.x))+geom_line()
+```
+
+let's now use this function:
+
+```{r}
+macd_m_bull_norm <- macd_bull_norm %>% select(X3.x) %>% to_m(100)
+```
+
+## Visualize new matrix in 3D
+
+```{r}
+plot_ly(z = macd_m_bull_norm, type = "surface")
+```
+
+
+## Trying to fit model now:
+
+```{r}
+# start h2o virtual machine
+h2o.init()
+# load data into h2o environment
+macd_bv  <- as.h2o(x = macd_m_bull_norm, destination_frame = "macd_bull_norm")
+```
+
+```{r}
+# fit the model
+deepnet_model <- h2o.deeplearning(
+ x = names(macd_bv), 
+ training_frame = macd_bv, 
+ activation = "Tanh", 
+ autoencoder = TRUE, 
+ hidden = c(50,20,50), 
+ sparse = TRUE,
+ l1 = 1e-4, 
+ epochs = 100)
+```
+
+Any time need to make a pause?
+
+```{r}
+#h2o.shutdown(prompt = F)
+```
+
+```{r}
+# check mse
+mod_error <- h2o.anomaly(deepnet_model, test_M4) %>% as.data.frame()
+
+mod_error
+mod_error %>% summarise(mean_mse = mean(Reconstruction.MSE))
+```
+
+We should also try to reduce or increase complexity of this model
+
+```{r}
+# fit the model A
+SimpleA <- h2o.deeplearning(
+ x = names(macd_bv), 
+ training_frame = macd_bv, 
+ activation = "Tanh", 
+ autoencoder = TRUE, 
+ hidden = c(50,20,50), 
+ sparse = TRUE,
+ l1 = 1e-4, 
+ epochs = 100)
+mod_errA <- h2o.anomaly(SimpleA, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
+# fit the model B
+SimpleB <- h2o.deeplearning(
+ x = names(macd_bv), 
+ training_frame = macd_bv, 
+ activation = "Tanh", 
+ autoencoder = TRUE, 
+ hidden = c(70,50,70), 
+ sparse = TRUE,
+ l1 = 1e-4, 
+ epochs = 100)
+mod_errB <- h2o.anomaly(SimpleB, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
+# fit the model C
+SimpleC <- h2o.deeplearning(
+ x = names(macd_bv), 
+ training_frame = macd_bv, 
+ activation = "Tanh", 
+ autoencoder = TRUE, 
+ hidden = c(30,10,30), 
+ sparse = TRUE,
+ l1 = 1e-4, 
+ epochs = 100)
+mod_errC <- h2o.anomaly(SimpleC, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
+# fit the model D
+SimpleD <- h2o.deeplearning(
+ x = names(macd_bv), 
+ training_frame = macd_bv, 
+ activation = "Tanh", 
+ autoencoder = TRUE, 
+ hidden = c(100,20,100), 
+ sparse = TRUE,
+ l1 = 1e-4, 
+ epochs = 100)
+mod_errD <- h2o.anomaly(SimpleD, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
+# fit the model E
+SimpleE <- h2o.deeplearning(
+ x = names(macd_bv), 
+ training_frame = macd_bv, 
+ activation = "Tanh", 
+ autoencoder = TRUE, 
+ hidden = c(70,50,20,50,70), 
+ sparse = TRUE,
+ l1 = 1e-4, 
+ epochs = 100)
+mod_errE <- h2o.anomaly(SimpleE, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
+
+```
+
+Summarise what we get
+
+```{r}
+mod_errA
+mod_errB
+mod_errC
+mod_errD
+mod_errE
+```
+
+
+This model A was already good, the MSE slightly reduced moving to sligtly complex one... we will leave Model_B...
+
+## Save the model
+
+```{r}
+if(!file.exists("models/bull_norm.bin")){
+h2o.saveModel(SimpleA, "models/bull_norm.bin")
+}
+
+h2o.shutdown(prompt = F)
 ```
 
 
@@ -75,8 +208,66 @@ ggplot(macd_bull_volat, aes(X1, X3.y, col = X3.x))+geom_line()
 ### 2. Bull volatile
 
 ```{r}
-ggplot(prices, aes(X1, X10))+geom_line()
+ggplot(prices, aes(X1, X5))+geom_line()
 ```
+
+We will extract only corresponding piece... from end of October to beginning November
+
+```{r}
+# extract approximate date and choose only relevant columns
+bull_volat <- prices %>% filter(X1 > "2017-10-31", X1 < "2017-11-02") %>% select(X1, X23)
+```
+
+... and visualize it to confirm 
+
+```{r}
+ggplot(bull_volat, aes(X1, X23))+geom_line()
+```
+
+next, we can extract corresponding piece of macd dataframe:
+
+```{r}
+macd_bull_volat <- macd %>% select(X1, X10) %>% inner_join(bull_volat, by = c("X1" = "X1"))
+```
+
+and visualize both things together
+
+```{r}
+ggplot(macd_bull_volat, aes(X1, X10.y, col = X10.x))+geom_line()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### 3. Bear normal
 
@@ -105,10 +296,40 @@ ggplot(prices, aes(X1, X10))+geom_line()
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Utility Code
+
 ## Adapting function to_m
 
 ```{r}
-
 
 # Function converting time series data to matrix
 to_m <- function(x, n_cols) {
@@ -143,62 +364,6 @@ to_m <- function(x, n_cols) {
 }
 
 ```
-
-let's now use this function:
-
-```{r}
-macd_m_bull_volat <- macd_bull_volat %>% select(X3.x) %>% to_m(100)
-```
-
-## Visualize new matrix in 3D
-
-```{r}
-plot_ly(z = macd_m_bull_volat, type = "surface")
-```
-
-
-## Trying to fit model now:
-
-```{r}
-# start h2o virtual machine
-h2o.init()
-# load data into h2o environment
-test_M4  <- as.h2o(x = macd_m_bull_volat, destination_frame = "macd_bull_volat")
-```
-
-```{r}
-# fit the model
-deepnet_model <- h2o.deeplearning(
- x = names(test_M4), 
- training_frame = test_M4, 
- activation = "Tanh", 
- autoencoder = TRUE, 
- hidden = c(50,20,50), 
- sparse = TRUE,
- l1 = 1e-4, 
- epochs = 100)
-```
-
-Any time need to make a pause?
-
-```{r}
-#h2o.shutdown(prompt = F)
-```
-
-```{r}
-# check mse
-mod_error <- h2o.anomaly(deepnet_model, test_M4) %>% as.data.frame()
-
-mod_error
-```
-
-
-
-
-
-
-
-
 
 
 ## Install fresh copy of h2o
