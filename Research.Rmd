@@ -1,0 +1,214 @@
+---
+title: "Detect Market status with AI"
+output: html_notebook
+---
+
+## Task outlay
+
+Required to read time series data, visualize it as time-series data, transform to matrix, visualize again as 3D, train the model...
+
+## Load packages
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(lubridate)
+library(plotly)
+library(h2o)
+```
+
+## Data read
+
+```{r}
+# load prices of 28 currencies
+prices <- read_csv("AI_CP15.csv", col_names = F)
+prices$X1 <- ymd_hms(prices$X1)
+# load macd indicator of 28 currencies
+macd <- read_csv("AI_Macd15.csv", col_names = F)
+macd$X1 <- ymd_hms(macd$X1)
+```
+
+## Catching specific market periods
+
+I would manually change Y variable in the plot until I find siutable market condition...
+
+1. Bull normal
+2. Bull volatile
+3. Bear normal
+4. Bear volatile
+5. Sideways quiet
+6. Sideways volatile
+
+### 1. Bull normal
+
+```{r}
+ggplot(prices, aes(X1, X3))+geom_line()
+```
+
+We will extract only corresponding piece...
+
+```{r}
+# extract approximate date and choose only relevant columns
+bull_volat <- prices %>% filter(X1 > "2017-11-05", X1 < "2017-11-25") %>% select(X1, X3)
+```
+
+... and visualize it to confirm 
+
+```{r}
+ggplot(bull_volat, aes(X1, X3))+geom_line()
+```
+
+next, we can extract corresponding piece of macd dataframe:
+
+```{r}
+macd_bull_volat <- macd %>% select(X1, X3) %>% inner_join(bull_volat, by = c("X1" = "X1"))
+```
+
+and visualize both things together
+
+```{r}
+ggplot(macd_bull_volat, aes(X1, X3.y, col = X3.x))+geom_line()
+```
+
+
+
+
+### 2. Bull volatile
+
+```{r}
+ggplot(prices, aes(X1, X10))+geom_line()
+```
+
+### 3. Bear normal
+
+```{r}
+ggplot(prices, aes(X1, X10))+geom_line()
+```
+
+### 4. Bear volatile
+
+```{r}
+ggplot(prices, aes(X1, X10))+geom_line()
+```
+
+### 5. Sideways quiet
+
+
+```{r}
+ggplot(prices, aes(X1, X10))+geom_line()
+```
+
+### 6. Sideways volatile
+
+```{r}
+ggplot(prices, aes(X1, X10))+geom_line()
+```
+
+
+
+## Adapting function to_m
+
+```{r}
+
+
+# Function converting time series data to matrix
+to_m <- function(x, n_cols) {
+  ### PURPOSE: Transform Time Series Column of the dataframe to the matrix
+  #            with specified number of columns. Number of rows will be automatically
+  #            found and remaining data points discarded
+  # # Uncomment variable to debug function
+  # x -< dataframe with one column that is 
+  
+  # x <- DF_TEMP
+  # n_cols <- 150
+  
+  # get intermediate object and dimension
+  Step1 <- x
+  # find number of rows of data frame
+  nrows <- Step1 %>% nrow()
+  # find the number of row in a matrix (Whole Rows), the value will have decimals...
+  WN <- nrows/n_cols
+  ## extract the whole number uncomment for debug/test
+  # WN <- 19.2
+  # WN <- 19.8
+  if((WN - round(WN)) < 0){WN <- round(WN) - 1} else {WN <- round(WN)}
+  # find number of rows to extract data
+  n <- n_cols * WN
+  # extract relevant matrix
+  Step2 <- Step1 %>% 
+    head(n) %>% #only use whole number to avoid errors
+    t() %>%  # this brings us a matrix
+    matrix(nrow = WN, ncol = n_cols, byrow = TRUE) # transforming that into matrix size 20x150
+  # return the result of the function
+  return(Step2)
+}
+
+```
+
+let's now use this function:
+
+```{r}
+macd_m_bull_volat <- macd_bull_volat %>% select(X3.x) %>% to_m(100)
+```
+
+## Visualize new matrix in 3D
+
+```{r}
+plot_ly(z = macd_m_bull_volat, type = "surface")
+```
+
+
+## Trying to fit model now:
+
+```{r}
+# start h2o virtual machine
+h2o.init()
+# load data into h2o environment
+test_M4  <- as.h2o(x = macd_m_bull_volat, destination_frame = "macd_bull_volat")
+```
+
+```{r}
+# fit the model
+deepnet_model <- h2o.deeplearning(
+ x = names(test_M4), 
+ training_frame = test_M4, 
+ activation = "Tanh", 
+ autoencoder = TRUE, 
+ hidden = c(50,20,50), 
+ sparse = TRUE,
+ l1 = 1e-4, 
+ epochs = 100)
+```
+
+Any time need to make a pause?
+
+```{r}
+h2o.shutdown(prompt = F)
+```
+
+
+
+
+
+
+
+
+
+
+
+## Install fresh copy of h2o
+
+```{r eval=FALSE, include=FALSE}
+# The following two commands remove any previously installed H2O packages for R.
+if ("package:h2o" %in% search()) { detach("package:h2o", unload=TRUE) }
+if ("h2o" %in% rownames(installed.packages())) { remove.packages("h2o") }
+
+# Next, we download packages that H2O depends on.
+pkgs <- c("RCurl","jsonlite")
+for (pkg in pkgs) {
+if (! (pkg %in% rownames(installed.packages()))) { install.packages(pkg) }
+}
+
+# Now we download, install and initialize the H2O package for R.
+install.packages("h2o", type="source", repos="http://h2o-release.s3.amazonaws.com/h2o/rel-wheeler/2/R")
+```
+
