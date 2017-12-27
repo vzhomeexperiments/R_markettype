@@ -34,3 +34,7 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 .Rproj.user
+
+# Scripts not for repo:
+Research.Rmd
+Research.nb.html

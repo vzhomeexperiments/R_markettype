@@ -18,23 +18,23 @@ macd$X1 <- ymd_hms(macd$X1)
 
 #### Fitting Deep Learning Net =================================================
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
-ggplot(prices, aes(X1, X11))+geom_line()
+ggplot(prices, aes(X1, X13))+geom_line()
 
 # Extract approximate date and choose only relevant columns
-price_df <- prices %>% filter(X1 > "2017-09-20", X1 < "2017-10-24") %>% select(X1, X11)
+price_df <- prices %>% filter(X1 > "2017-09-15", X1 < "2017-12-20") %>% select(X1, X13)
 
 # Visualize it to confirm 
-ggplot(price_df, aes(X1, X11))+geom_line()
+ggplot(price_df, aes(X1, X13))+geom_line()
 
 # Extract corresponding piece of macd dataframe:
-macd_df <- macd %>% select(X1, X11) %>% inner_join(price_df, by = c("X1" = "X1"))
+macd_df <- macd %>% select(X1, X13) %>% inner_join(price_df, by = c("X1" = "X1"))
 
 # Visualize both things together
-ggplot(macd_df, aes(X1, X11.y, col = X11.x))+geom_line()
+ggplot(macd_df, aes(X1, X13.y, col = X13.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
 source("to_m.R")
-macd_m <- macd_df %>% select(X11.x) %>% to_m(100)
+macd_m <- macd_df %>% select(X13.x) %>% to_m(100)
 
 ## Visualize new matrix in 3D
 plot_ly(z = macd_m, type = "surface")
@@ -111,8 +111,8 @@ mod_errF <- h2o.anomaly(ModelF, macd_vm) %>% as.data.frame() %>% summarise(mean_
 errors = c(mod_errA, mod_errB, mod_errC, mod_errD, mod_errE, mod_errF)
 
 ## Save the model
-if(!file.exists("models/5_rang_norm.bin")){
-h2o.saveModel(ModelB, "models/5_rang_norm.bin")
+if(!file.exists("models/6_rang_volat.bin")){
+h2o.saveModel(ModelB, "models/6_rang_volat.bin")
 }
 # shutdown the virtual machine
 h2o.shutdown(prompt = F)

@@ -202,126 +202,9 @@ h2o.saveModel(SimpleA, "models/bull_norm.bin")
 h2o.shutdown(prompt = F)
 ```
 
+## Conclusion
 
-
-
-### 2. Bull volatile
-
-```{r}
-ggplot(prices, aes(X1, X5))+geom_line()
-```
-
-We will extract only corresponding piece... from end of October to beginning November
-
-```{r}
-# extract approximate date and choose only relevant columns
-bull_volat <- prices %>% filter(X1 > "2017-10-31", X1 < "2017-11-02") %>% select(X1, X23)
-```
-
-... and visualize it to confirm 
-
-```{r}
-ggplot(bull_volat, aes(X1, X23))+geom_line()
-```
-
-next, we can extract corresponding piece of macd dataframe:
-
-```{r}
-macd_bull_volat <- macd %>% select(X1, X10) %>% inner_join(bull_volat, by = c("X1" = "X1"))
-```
-
-and visualize both things together
-
-```{r}
-ggplot(macd_bull_volat, aes(X1, X10.y, col = X10.x))+geom_line()
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### 3. Bear normal
-
-```{r}
-ggplot(prices, aes(X1, X10))+geom_line()
-```
-
-### 4. Bear volatile
-
-```{r}
-ggplot(prices, aes(X1, X10))+geom_line()
-```
-
-### 5. Sideways quiet
-
-
-```{r}
-ggplot(prices, aes(X1, X10))+geom_line()
-```
-
-### 6. Sideways volatile
-
-```{r}
-ggplot(prices, aes(X1, X10))+geom_line()
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+This procedure can be repeated for every market period... and hopefully it will bring some fruits...?
 
 
 
@@ -337,7 +220,7 @@ to_m <- function(x, n_cols) {
   #            with specified number of columns. Number of rows will be automatically
   #            found and remaining data points discarded
   # # Uncomment variable to debug function
-  # x -< dataframe with one column that is 
+  # x -< dataframe with one column
   
   # x <- DF_TEMP
   # n_cols <- 150
@@ -367,6 +250,8 @@ to_m <- function(x, n_cols) {
 
 
 ## Install fresh copy of h2o
+
+See www.h2o.ai
 
 ```{r eval=FALSE, include=FALSE}
 # The following two commands remove any previously installed H2O packages for R.
