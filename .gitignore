@@ -38,3 +38,4 @@ vignettes/*.pdf
 # Scripts not for repo:
 Research.Rmd
 Research.nb.html
+tutorial.R

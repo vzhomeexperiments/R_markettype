@@ -41,7 +41,7 @@ macd_m <- macd_df %>% select(X3.x) %>% to_m(50)
 #########################################################################
 
 # add new column to this matrix with value 1
-macd_m_1 <- transform(macd_m, M_T = 1) %>% as.matrix()
+macd_m_1 <- transform(macd_m, M_T = "one")
 
 ##########################################################################
 
@@ -65,7 +65,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X4.x) %>% to_m(50)
 
 #########################################################################
-macd_m_2 <- transform(macd_m, M_T = 2) %>% as.matrix()
+macd_m_2 <- transform(macd_m, M_T = "two") 
 #########################################################################
 
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -88,7 +88,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X12.x) %>% to_m(50)
 
 #########################################################################
-macd_m_3 <- transform(macd_m, M_T = 3) %>% as.matrix()
+macd_m_3 <- transform(macd_m, M_T = "three")
 #########################################################################
 
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -111,7 +111,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X6.x) %>% to_m(50)
 
 #########################################################################
-macd_m_4 <- transform(macd_m, M_T = 4) %>% as.matrix()
+macd_m_4 <- transform(macd_m, M_T = "four")
 #########################################################################
 
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -134,7 +134,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X11.x) %>% to_m(50)
 
 #########################################################################
-macd_m_5 <- transform(macd_m, M_T = 5) %>% as.matrix()
+macd_m_5 <- transform(macd_m, M_T = "five") 
 #########################################################################
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
 ggplot(prices, aes(X1, X13))+geom_line()
@@ -156,7 +156,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X13.x) %>% to_m(50)
 
 #########################################################################
-macd_m_6 <- transform(macd_m, M_T = 6) %>% as.matrix()
+macd_m_6 <- transform(macd_m, M_T = "six")
 #########################################################################
 #########################################################################
 #########################################################################
@@ -180,8 +180,9 @@ macd_ML  <- as.h2o(x = macd_ML, destination_frame = "macd_ML")
 # fit models from simplest to more complex
 ModelA <- h2o.deeplearning(
   x = names(macd_ML[,1:50]), 
-  y = names(macd_ML[, 51]),
-  training_frame = macd_ML, 
+  y = "M_T",
+  training_frame = macd_ML,
+  #distribution = "multinomial",
   activation = "Tanh", 
   autoencoder = FALSE, 
   hidden = c(50,20,50), 
@@ -189,8 +190,9 @@ ModelA <- h2o.deeplearning(
   l1 = 1e-4, 
   epochs = 100)
 
+# tor return predicted classes
 predicted <- h2o.predict(ModelA, macd_ML) %>% as.data.frame()
-
+as.factor(predicted)
 
 
 
