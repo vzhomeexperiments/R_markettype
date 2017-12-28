@@ -34,7 +34,7 @@ Pairs = c("EURUSD", "GBPUSD", "AUDUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY",
           "AUDNZD", "CADJPY", "CHFJPY", "NZDJPY", "NZDCAD", "NZDCHF", "CADCHF")   
 
 # Prepare data frame with last 100 observations and remove date/time column
-macd_100 <- macd %>% head(50) %>% select(c(X2:X29))
+macd_100 <- macd %>% select(c(X2:X29)) %>% head(32)
 
 # Rename the column?
 names(macd_100) <- Pairs
@@ -42,7 +42,10 @@ names(macd_100) <- Pairs
 # Solve for one
 X <- macd_100 %>% select(EURUSD)
 
-
+source("to_m.R")
+X_m <- to_m(X, 32) 
+X_m$M_T <- ""
+X_m<- as.data.frame(X_m)
 # load the virtual machine
 library(h2o)
 
@@ -53,25 +56,15 @@ market_type_num <- function(x){
 # x is a 1 column dataframe containing 100 values
 # Convert to matrix
 source("to_m.R")
-X_m <- to_m(x, 50)  
+X_m <- to_m(X, 32)  
 # load the dataset 
-test  <- as.h2o(x = X_m, destination_frame = "test")
+test  <- as.h2o(x = X, destination_frame = "test")
 
 # load all models
-m1 <- h2o.loadModel("models/1_bull_norm_v2.bin/DeepLearning_model_R_1514456875628_1") 
-m2 <- h2o.loadModel("models/2_bull_volat_v2.bin/DeepLearning_model_R_1514457608582_2") 
-m3 <- h2o.loadModel("models/3_bear_norm_v2.bin/DeepLearning_model_R_1514457755690_1") 
-m4 <- h2o.loadModel("models/4_bear_volat_v2.bin/DeepLearning_model_R_1514457975299_2") 
-m5 <- h2o.loadModel("models/5_rang_norm_v2.bin/DeepLearning_model_R_1514458137225_1") 
-m6 <- h2o.loadModel("models/6_rang_volat_v2.bin/DeepLearning_model_R_1514458239855_1") 
+m1 <- h2o.loadModel("models/classifier.bin/DeepLearning_model_R_1514493061342_8") 
 
 # retrieve the error on each
-e1 <- h2o.anomaly(m1, test) %>% as.vector()
-e2 <- h2o.anomaly(m2, test) %>% as.vector()
-e3 <- h2o.anomaly(m3, test) %>% as.vector()
-e4 <- h2o.anomaly(m4, test) %>% as.vector()
-e5 <- h2o.anomaly(m5, test) %>% as.vector()
-e6 <- h2o.anomaly(m6, test) %>% as.vector()
+e1 <- h2o.predict(m1, test) 
 
 # join and find the minimum (best fit)
 results <- c(e1, e2, e3, e4, e5, e6)

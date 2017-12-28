@@ -36,7 +36,7 @@ ggplot(macd_df, aes(X1, X3.y, col = X3.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
 source("to_m.R")
-macd_m <- macd_df %>% select(X3.x) %>% to_m(50)
+macd_m <- macd_df %>% select(X3.x) %>% to_m(32)
 
 #########################################################################
 
@@ -62,7 +62,7 @@ ggplot(macd_df, aes(X1, X4.y, col = X4.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
 source("to_m.R")
-macd_m <- macd_df %>% select(X4.x) %>% to_m(50)
+macd_m <- macd_df %>% select(X4.x) %>% to_m(32)
 
 #########################################################################
 macd_m_2 <- transform(macd_m, M_T = "two") 
@@ -85,7 +85,7 @@ ggplot(macd_df, aes(X1, X12.y, col = X12.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
 source("to_m.R")
-macd_m <- macd_df %>% select(X12.x) %>% to_m(50)
+macd_m <- macd_df %>% select(X12.x) %>% to_m(32)
 
 #########################################################################
 macd_m_3 <- transform(macd_m, M_T = "three")
@@ -108,7 +108,7 @@ ggplot(macd_df, aes(X1, X6.y, col = X6.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
 source("to_m.R")
-macd_m <- macd_df %>% select(X6.x) %>% to_m(50)
+macd_m <- macd_df %>% select(X6.x) %>% to_m(32)
 
 #########################################################################
 macd_m_4 <- transform(macd_m, M_T = "four")
@@ -131,7 +131,7 @@ ggplot(macd_df, aes(X1, X11.y, col = X11.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
 source("to_m.R")
-macd_m <- macd_df %>% select(X11.x) %>% to_m(50)
+macd_m <- macd_df %>% select(X11.x) %>% to_m(32)
 
 #########################################################################
 macd_m_5 <- transform(macd_m, M_T = "five") 
@@ -153,7 +153,7 @@ ggplot(macd_df, aes(X1, X13.y, col = X13.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
 source("to_m.R")
-macd_m <- macd_df %>% select(X13.x) %>% to_m(50)
+macd_m <- macd_df %>% select(X13.x) %>% to_m(32)
 
 #########################################################################
 macd_m_6 <- transform(macd_m, M_T = "six")
@@ -162,10 +162,10 @@ macd_m_6 <- transform(macd_m, M_T = "six")
 #########################################################################
 
 # Combine all of that :)
-macd_ML <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
+macd_ML1 <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
 
 ### NOTE Number of rows Matrices needs to be roughly equal(?)
-
+macd_ML1$M_T <- as.factor(macd_ML1$M_T)
 
 
 ## Visualize new matrix in 3D
@@ -175,87 +175,36 @@ plot_ly(z = macd_ML[,1:50], type = "surface")
 # start h2o virtual machine
 h2o.init()
 # load data into h2o environment
-macd_ML  <- as.h2o(x = macd_ML, destination_frame = "macd_ML")
+macd_ML  <- as.h2o(x = macd_ML1, destination_frame = "macd_ML")
 
 # fit models from simplest to more complex
 ModelA <- h2o.deeplearning(
-  x = names(macd_ML[,1:50]), 
+  x = names(macd_ML[,1:32]), 
   y = "M_T",
   training_frame = macd_ML,
-  #distribution = "multinomial",
-  activation = "Tanh", 
+  activation = "Tanh",
+  overwrite_with_best_model = TRUE, 
   autoencoder = FALSE, 
-  hidden = c(50,20,50), 
+  hidden = c(10,30,10), 
+  loss = "Automatic",
   sparse = TRUE,
-  l1 = 1e-4, 
-  epochs = 100)
+  l1 = 1e-4,
+  distribution = "AUTO",
+  stopping_metric = "MSE",
+  balance_classes = T,
+  epochs = 600)
 
-# tor return predicted classes
+ModelA
+summary(ModelA)
+plot(h2o.performance(ModelA))
+
+# to return predicted classes
 predicted <- h2o.predict(ModelA, macd_ML) %>% as.data.frame()
-as.factor(predicted)
 
-
-
-
-
-ModelB <- h2o.deeplearning(
-  x = names(macd_vm), 
-  training_frame = macd_vm, 
-  activation = "Tanh", 
-  autoencoder = TRUE, 
-  hidden = c(50,20,50), 
-  sparse = TRUE,
-  l1 = 1e-4, 
-  epochs = 100)
-ModelC <- h2o.deeplearning(
-  x = names(macd_vm), 
-  training_frame = macd_vm, 
-  activation = "Tanh", 
-  autoencoder = TRUE, 
-  hidden = c(70,20,70), 
-  sparse = TRUE,
-  l1 = 1e-4, 
-  epochs = 100)
-ModelD <- h2o.deeplearning(
-  x = names(macd_vm), 
-  training_frame = macd_vm, 
-  activation = "Tanh", 
-  autoencoder = TRUE, 
-  hidden = c(90,20,90), 
-  sparse = TRUE,
-  l1 = 1e-4, 
-  epochs = 100)
-ModelE <- h2o.deeplearning(
-  x = names(macd_vm), 
-  training_frame = macd_vm, 
-  activation = "Tanh", 
-  autoencoder = TRUE, 
-  hidden = c(100,50, 20,50, 100), 
-  sparse = TRUE,
-  l1 = 1e-4, 
-  epochs = 100)
-ModelF <- h2o.deeplearning(
-  x = names(macd_vm), 
-  training_frame = macd_vm, 
-  activation = "Tanh", 
-  autoencoder = TRUE, 
-  hidden = c(100,70, 20,70, 100), 
-  sparse = TRUE,
-  l1 = 1e-4, 
-  epochs = 100)
-
-mod_errA <- h2o.anomaly(ModelA, macd_vm) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-mod_errB <- h2o.anomaly(ModelB, macd_vm) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-mod_errC <- h2o.anomaly(ModelC, macd_vm) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-mod_errD <- h2o.anomaly(ModelD, macd_vm) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-mod_errE <- h2o.anomaly(ModelE, macd_vm) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-mod_errF <- h2o.anomaly(ModelF, macd_vm) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-
-errors = c(mod_errA, mod_errB, mod_errC, mod_errD, mod_errE, mod_errF)
 
 ## Save the model
-if(!file.exists("models/1_bull_norm_v2.bin")){
-h2o.saveModel(ModelA, "models/1_bull_norm_v2.bin")
+if(!file.exists("models/classifier.bin")){
+h2o.saveModel(ModelA, "models/classifier.bin")
 }
 # shutdown the virtual machine
 h2o.shutdown(prompt = F)
