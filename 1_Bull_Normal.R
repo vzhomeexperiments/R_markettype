@@ -21,7 +21,7 @@ macd$X1 <- ymd_hms(macd$X1)
 ggplot(prices, aes(X1, X3))+geom_line()
 
 # Extract approximate date and choose only relevant columns
-price_df <- price_df %>% filter(X1 > "2017-11-05", X1 < "2017-11-25") %>% select(X1, X3)
+price_df <- prices %>% filter(X1 > "2017-11-05", X1 < "2017-11-25") %>% select(X1, X3)
 
 # Visualize it to confirm 
 ggplot(price_df, aes(X1, X3))+geom_line()
@@ -34,7 +34,7 @@ ggplot(macd_df, aes(X1, X3.y, col = X3.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
 source("to_m.R")
-macd_m <- macd_df %>% select(X3.x) %>% to_m(100)
+macd_m <- macd_df %>% select(X3.x) %>% to_m(50)
 
 ## Visualize new matrix in 3D
 plot_ly(z = macd_m, type = "surface")
@@ -111,8 +111,8 @@ mod_errF <- h2o.anomaly(ModelF, macd_vm) %>% as.data.frame() %>% summarise(mean_
 errors = c(mod_errA, mod_errB, mod_errC, mod_errD, mod_errE, mod_errF)
 
 ## Save the model
-if(!file.exists("models/1_bull_norm.bin")){
-h2o.saveModel(ModelB, "models/1_bull_norm.bin")
+if(!file.exists("models/1_bull_norm_v2.bin")){
+h2o.saveModel(ModelA, "models/1_bull_norm_v2.bin")
 }
 # shutdown the virtual machine
 h2o.shutdown(prompt = F)

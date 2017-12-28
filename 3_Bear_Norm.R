@@ -34,7 +34,7 @@ ggplot(macd_df, aes(X1, X12.y, col = X12.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
 source("to_m.R")
-macd_m <- macd_df %>% select(X12.x) %>% to_m(100)
+macd_m <- macd_df %>% select(X12.x) %>% to_m(50)
 
 ## Visualize new matrix in 3D
 plot_ly(z = macd_m, type = "surface")
@@ -111,8 +111,8 @@ mod_errF <- h2o.anomaly(ModelF, macd_vm) %>% as.data.frame() %>% summarise(mean_
 errors = c(mod_errA, mod_errB, mod_errC, mod_errD, mod_errE, mod_errF)
 
 ## Save the model
-if(!file.exists("models/3_bear_norm.bin")){
-h2o.saveModel(ModelB, "models/3_bear_norm.bin")
+if(!file.exists("models/3_bear_norm_v2.bin")){
+h2o.saveModel(ModelA, "models/3_bear_norm_v2.bin")
 }
 # shutdown the virtual machine
 h2o.shutdown(prompt = F)
