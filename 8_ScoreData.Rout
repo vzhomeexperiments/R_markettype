@@ -52,6 +52,65 @@ The following object is masked from 'package:base':
 > 
 > # once the data are there we can start the virtual machine and load all our models
 > # later on we will need to perform one operation for every column
+> ## Adapting function to_m
+> 
+> # Function converting time series data to matrix
+> to_m <- function(x, n_cols) {
++   ### PURPOSE: Transform Time Series Column of the dataframe to the matrix
++   #            with specified number of columns. Number of rows will be automatically
++   #            found and remaining data points discarded
++   # # Uncomment variable to debug function
++   # x -< dataframe with one column that is 
++   
++   # x <- DF_TEMP
++   # n_cols <- 150
++   
++   # get intermediate object and dimension
++   Step1 <- x
++   # find number of rows of data frame
++   nrows <- Step1 %>% nrow()
++   # find the number of row in a matrix (Whole Rows), the value will have decimals...
++   WN <- nrows/n_cols
++   ## extract the whole number uncomment for debug/test
++   # WN <- 19.2
++   # WN <- 19.8
++   if((WN - round(WN)) < 0){WN <- round(WN) - 1} else {WN <- round(WN)}
++   # find number of rows to extract data
++   n <- n_cols * WN
++   # extract relevant matrix
++   Step2 <- Step1 %>% 
++     head(n) %>% #only use whole number to avoid errors
++     t() %>%  # this brings us a matrix
++     matrix(nrow = WN, ncol = n_cols, byrow = TRUE) # transforming that into matrix size 20x150
++   # return the result of the function
++   return(Step2)
++ }
+> 
+> 
+> evaluate_market_type <- function(x, model_path, num_cols){
++   # x is a 1 column dataframe containing 32 observations
++   # Convert to matrix
++   X_m <- to_m(x, num_cols) %>% as.data.frame()
++   colnames(X_m) <- c(paste("X",1:num_cols,sep=""))
++   # load the dataset to h2o 
++   test  <- as.h2o(x = X_m, destination_frame = "test")
++   
++   # load all models
++   m1 <- h2o.loadModel(model_path) 
++   
++   # retrieve the error on each
++   e1 <- h2o.predict(m1, test) 
++   
++   # round the number to achieve class
++   result <- round(e1) %>% as.vector()
++   
++   # manage negatives and/or bizzare numbers
++   if(result <= 0 || result > 6) {element <- -1} else {element <- result}
++   
++   # output result of prediction from the function
++   return(element)
++   
++ }
 > 
 > #1. Extract last 100 observations
 > #2. Convert them to matrix
@@ -121,8 +180,8 @@ The following objects are masked from 'package:base':
 H2O is not running yet, starting it now...
 
 Note:  In case of errors look at the following log files:
-    C:\Users\fxtrams\AppData\Local\Temp\RtmpothL5L/h2o_fxtrams_started_from_r.out
-    C:\Users\fxtrams\AppData\Local\Temp\RtmpothL5L/h2o_fxtrams_started_from_r.err
+    C:\Users\fxtrams\AppData\Local\Temp\Rtmp6906sD/h2o_fxtrams_started_from_r.out
+    C:\Users\fxtrams\AppData\Local\Temp\Rtmp6906sD/h2o_fxtrams_started_from_r.err
 
 java version "1.8.0_121"
 Java(TM) SE Runtime Environment (build 1.8.0_121-b13)
@@ -131,7 +190,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.121-b13, mixed mode)
 Starting H2O JVM and connecting: . Connection successful!
 
 R is connected to the H2O cluster: 
-    H2O cluster uptime:         2 seconds 302 milliseconds 
+    H2O cluster uptime:         2 seconds 365 milliseconds 
     H2O cluster version:        3.16.0.2 
     H2O cluster version age:    29 days  
     H2O cluster name:           H2O_started_from_R_fxtrams_rjh962 
@@ -148,46 +207,84 @@ R is connected to the H2O cluster:
     R Version:                  R version 3.4.3 (2017-11-30) 
 
 > 
-> market_type_num <- function(x){
-+ # x is a 1 column dataframe containing 32 values
-+ # Convert to matrix
-+   source("to_m.R")
-+   X_m <- to_m(x, 32) %>% as.data.frame()
-+   colnames(X_m) <- c(paste("X",1:32,sep=""))
-+ # load the dataset to h2o 
-+ test  <- as.h2o(x = X_m, destination_frame = "test")
-+ 
-+ # load all models
-+ m1 <- h2o.loadModel("models/regression.bin/DeepLearning_model_R_1514534458554_3") 
-+ 
-+ # retrieve the error on each
-+ e1 <- h2o.predict(m1, test) 
-+ 
-+ # round the number to achieve class
-+ result <- round(e1) %>% as.vector()
-+ 
-+ # manage negatives and/or bizzare numbers
-+ if(result <= 0 || result > 6) {element <- -1} else {element <- result}
-+ 
-+ # output result of prediction from the function
-+ return(element)
-+ 
-+ }
-> 
 > # test function
 > #my_market <- market_type_num(x = X)
 > 
 > # test for all columns
 > for (PAIR in Pairs) {
 +   df <- macd_100 %>% select(PAIR)
-+   my_market <- market_type_num(x = df) %>% as.data.frame()
++   my_market <- evaluate_market_type(x = df,
++                                     model_path = "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models/regression.bin/DeepLearning_model_R_1514534458554_3",
++                                     num_cols = 32) %>% as.data.frame()
 +   names(my_market) <- PAIR
-+   write_csv(my_market, file.path(sbx, paste0(PAIR, ".csv")))
++   write_csv(my_market, file.path(sbx, paste0("AI_MarketType_", PAIR, ".csv")))
 + }
-Error in file(filename, "r", encoding = encoding) : 
-  cannot open the connection
-Calls: %>% -> eval -> eval -> market_type_num -> source -> file
-In addition: Warning message:
-In file(filename, "r", encoding = encoding) :
-  cannot open file 'to_m.R': No such file or directory
-Execution halted
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+  |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%
+> 
+> 
+> # shutdown
+> h2o.shutdown(prompt = F)
+[1] TRUE
+> 
+> 
+> proc.time()
+   user  system elapsed 
+   9.43    0.24   31.20 
+Error in h2o.getConnection() : 
+  No active connection to an H2O cluster. Did you run `h2o.init()` ?
+Calls: <Anonymous> ... .h2o.doREST -> stopifnot -> is -> h2o.getConnection
