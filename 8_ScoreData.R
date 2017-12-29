@@ -39,13 +39,12 @@ macd_100 <- macd %>% select(c(X2:X29)) %>% head(32)
 # Rename the column?
 names(macd_100) <- Pairs
 
-# Solve for one
-X <- macd_100 %>% select(EURUSD)
-
-source("to_m.R")
-X_m <- to_m(X, 32) 
-X_m$M_T <- ""
-X_m<- as.data.frame(X_m)
+# # Solve for one
+# X <- macd_100 %>% select(EURUSD)
+# 
+# source("to_m.R")
+# X_m <- to_m(X, 32) %>% as.data.frame()
+# colnames(X_m) <- c(paste("X",1:32,sep=""))
 # load the virtual machine
 library(h2o)
 
@@ -53,25 +52,27 @@ library(h2o)
 h2o.init()
 
 market_type_num <- function(x){
-# x is a 1 column dataframe containing 100 values
+# x is a 1 column dataframe containing 32 values
 # Convert to matrix
-source("to_m.R")
-X_m <- to_m(X, 32)  
-# load the dataset 
-test  <- as.h2o(x = X, destination_frame = "test")
+  source("to_m.R")
+  X_m <- to_m(x, 32) %>% as.data.frame()
+  colnames(X_m) <- c(paste("X",1:32,sep=""))
+# load the dataset to h2o 
+test  <- as.h2o(x = X_m, destination_frame = "test")
 
 # load all models
-m1 <- h2o.loadModel("models/classifier.bin/DeepLearning_model_R_1514493061342_8") 
+m1 <- h2o.loadModel("models/regression.bin/DeepLearning_model_R_1514534458554_3") 
 
 # retrieve the error on each
 e1 <- h2o.predict(m1, test) 
 
-# join and find the minimum (best fit)
-results <- c(e1, e2, e3, e4, e5, e6)
+# round the number to achieve class
+result <- round(e1) %>% as.vector()
 
-# element that has minimum value
-element <- which.min(results)
+# manage negatives and/or bizzare numbers
+if(result <= 0 || result > 6) {element <- -1} else {element <- result}
 
+# output result of prediction from the function
 return(element)
 
 }
@@ -92,4 +93,5 @@ for (PAIR in Pairs) {
 
 # shutdown
 h2o.shutdown(prompt = F)
+
 
