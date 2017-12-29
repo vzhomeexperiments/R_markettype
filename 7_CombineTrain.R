@@ -41,7 +41,7 @@ macd_m <- macd_df %>% select(X3.x) %>% to_m(32)
 #########################################################################
 
 # add new column to this matrix with value 1
-macd_m_1 <- transform(macd_m, M_T = "one")
+macd_m_1 <- transform(macd_m, M_T = 1)
 
 ##########################################################################
 
@@ -65,7 +65,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X4.x) %>% to_m(32)
 
 #########################################################################
-macd_m_2 <- transform(macd_m, M_T = "two") 
+macd_m_2 <- transform(macd_m, M_T = 2) 
 #########################################################################
 
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -88,7 +88,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X12.x) %>% to_m(32)
 
 #########################################################################
-macd_m_3 <- transform(macd_m, M_T = "three")
+macd_m_3 <- transform(macd_m, M_T = 3)
 #########################################################################
 
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -111,7 +111,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X6.x) %>% to_m(32)
 
 #########################################################################
-macd_m_4 <- transform(macd_m, M_T = "four")
+macd_m_4 <- transform(macd_m, M_T = 4)
 #########################################################################
 
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -134,7 +134,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X11.x) %>% to_m(32)
 
 #########################################################################
-macd_m_5 <- transform(macd_m, M_T = "five") 
+macd_m_5 <- transform(macd_m, M_T = 5) 
 #########################################################################
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
 ggplot(prices, aes(X1, X13))+geom_line()
@@ -156,7 +156,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X13.x) %>% to_m(32)
 
 #########################################################################
-macd_m_6 <- transform(macd_m, M_T = "six")
+macd_m_6 <- transform(macd_m, M_T = 6)
 #########################################################################
 #########################################################################
 #########################################################################
@@ -165,11 +165,11 @@ macd_m_6 <- transform(macd_m, M_T = "six")
 macd_ML1 <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
 
 ### NOTE Number of rows Matrices needs to be roughly equal(?)
-macd_ML1$M_T <- as.factor(macd_ML1$M_T)
+#macd_ML1$M_T <- as.factor(macd_ML1$M_T)
 
 
 ## Visualize new matrix in 3D
-plot_ly(z = macd_ML[,1:50], type = "surface")
+#plot_ly(z = macd_ML1[,1:32], type = "surface")
 
 ## Fit model now:
 # start h2o virtual machine
@@ -185,13 +185,13 @@ ModelA <- h2o.deeplearning(
   activation = "Tanh",
   overwrite_with_best_model = TRUE, 
   autoencoder = FALSE, 
-  hidden = c(10,30,10), 
+  hidden = c(100,100), 
   loss = "Automatic",
   sparse = TRUE,
   l1 = 1e-4,
   distribution = "AUTO",
   stopping_metric = "MSE",
-  balance_classes = T,
+  #balance_classes = T,
   epochs = 600)
 
 ModelA
@@ -203,8 +203,8 @@ predicted <- h2o.predict(ModelA, macd_ML) %>% as.data.frame()
 
 
 ## Save the model
-if(!file.exists("models/classifier.bin")){
-h2o.saveModel(ModelA, "models/classifier.bin")
+if(!file.exists("models/regression.bin")){
+h2o.saveModel(ModelA, "models/regression.bin")
 }
 # shutdown the virtual machine
 h2o.shutdown(prompt = F)
