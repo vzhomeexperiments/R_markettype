@@ -39,3 +39,4 @@ vignettes/*.pdf
 Research.Rmd
 Research.nb.html
 tutorial.R
+*.Rout
