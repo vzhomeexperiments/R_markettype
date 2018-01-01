@@ -48,7 +48,7 @@ macd_m <- macd_df %>% select(X3.x) %>% to_m(32)
 #########################################################################
 
 # add new column to this matrix with value 1
-macd_m_1 <- transform(macd_m, M_T = 1)
+macd_m_1 <- transform(macd_m, M_T = 10)
 
 ##########################################################################
 
@@ -72,7 +72,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X4.x) %>% to_m(32)
 
 #########################################################################
-macd_m_2 <- transform(macd_m, M_T = 2) 
+macd_m_2 <- transform(macd_m, M_T = 20) 
 #########################################################################
 
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -95,7 +95,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X12.x) %>% to_m(32)
 
 #########################################################################
-macd_m_3 <- transform(macd_m, M_T = 3)
+macd_m_3 <- transform(macd_m, M_T = 30)
 #########################################################################
 
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -118,7 +118,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X6.x) %>% to_m(32)
 
 #########################################################################
-macd_m_4 <- transform(macd_m, M_T = 4)
+macd_m_4 <- transform(macd_m, M_T = 40)
 #########################################################################
 
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -141,7 +141,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X11.x) %>% to_m(32)
 
 #########################################################################
-macd_m_5 <- transform(macd_m, M_T = 5) 
+macd_m_5 <- transform(macd_m, M_T = 50) 
 #########################################################################
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
 ggplot(prices, aes(X1, X13))+geom_line()
@@ -163,7 +163,7 @@ source("to_m.R")
 macd_m <- macd_df %>% select(X13.x) %>% to_m(32)
 
 #########################################################################
-macd_m_6 <- transform(macd_m, M_T = 6)
+macd_m_6 <- transform(macd_m, M_T = 60)
 #########################################################################
 #########################################################################
 #########################################################################
@@ -176,7 +176,7 @@ macd_ML1 <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
 
 
 ## Visualize new matrix in 3D
-#plot_ly(z = macd_ML1[,1:32], type = "surface")
+plot_ly(z = as.matrix(macd_ML1[,1:32]), type = "surface")
 #### Fitting Deep Learning Net =================================================
 ## Fit model now:
 # start h2o virtual machine
