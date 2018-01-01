@@ -18,7 +18,14 @@ prices$X1 <- ymd_hms(prices$X1)
 macd <- read_csv("AI_Macd15.csv", col_names = F)
 macd$X1 <- ymd_hms(macd$X1)
 
-#### Fitting Deep Learning Net =================================================
+#### Manually Selecting data... =================================================
+# Market Periods
+# 1. Bull normal
+# 2. Bull volatile
+# 3. Bear normal
+# 4. Bear volatile
+# 5. Sideways quiet
+# 6. Sideways volatile
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
 ggplot(prices, aes(X1, X3))+geom_line()
 
@@ -170,7 +177,7 @@ macd_ML1 <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
 
 ## Visualize new matrix in 3D
 #plot_ly(z = macd_ML1[,1:32], type = "surface")
-
+#### Fitting Deep Learning Net =================================================
 ## Fit model now:
 # start h2o virtual machine
 h2o.init()
