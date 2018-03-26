@@ -92,7 +92,7 @@ Pairs = c("EURUSD", "GBPUSD", "AUDUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY",
           "GBPCAD", "GBPCHF", "GBPJPY", "GBPNZD", "AUDCAD", "AUDCHF", "AUDJPY",
           "AUDNZD", "CADJPY", "CHFJPY", "NZDJPY", "NZDCAD", "NZDCHF", "CADCHF")   
 
-# Prepare data frame with last 100 observations and remove date/time column
+# Prepare data frame with last 32 observations and remove date/time column (6 hours)
 macd_100 <- macd %>% select(c(X2:X29)) %>% head(32)
 
 # Rename the column?
@@ -115,6 +115,7 @@ h2o.init()
 
 # test for all columns
 for (PAIR in Pairs) {
+  # PAIR <- "EURUSD"
   df <- macd_100 %>% select(PAIR)
   my_market <- evaluate_market_type(x = df,
                                     model_path = "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models/regression.bin/DeepLearning_model_R_1514534458554_3",

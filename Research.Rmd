@@ -3,9 +3,24 @@ title: "Detect Market status with AI"
 output: html_notebook
 ---
 
+## Purpose
+
+This work aims to develop sets of tools and procedures that will help trader to efficiently guess Financial Asset Market Type. Whether it's a Bullish or Bearish Market, Ranging, Volatile - Author believes that having this ability to detect market type and use it in trading would be of a great advantage!
+
 ## Task outlay
 
-Required to read time series data, visualize it as time-series data, transform to matrix, visualize again as 3D, train the model...
+Basic idea of achieveing this will be:
+
+- Manually classify data from forex pairs into periods
+- Extract MACD indicator corresponding to the periods
+- Create combined dataset with classified data
+- Fit regression NN model
+- Productionize model for the new coming data!
+- In MQL side:
+    - set flags (e.g. bullish: sell = False)
+    - fine tune parameters. (e.g. set up specific market period and find parameters by using optimization)
+
+- Required to read time series data, visualize it as time-series data, transform to matrix, visualize again as 3D, train the model...
 
 ## Load packages
 
@@ -19,10 +34,15 @@ library(h2o)
 ## Data read
 
 ```{r}
+# path to actual prices
+Path_T2 <- "C:/Program Files (x86)/FxPro - Terminal2/MQL4/Files/"
 # load prices of 28 currencies
+prices <- read_csv(file.path(Path_T2, "AI_CP15.csv"), col_names = F)
 prices <- read_csv("AI_CP15.csv", col_names = F)
 prices$X1 <- ymd_hms(prices$X1)
 # load macd indicator of 28 currencies
+macd <- read_csv(file.path(Path_T2, "AI_Macd15.csv"), col_names = F)
+# use this option to use sample data:
 macd <- read_csv("AI_Macd15.csv", col_names = F)
 macd$X1 <- ymd_hms(macd$X1)
 ```
@@ -37,6 +57,8 @@ I would manually change Y variable in the plot until I find siutable market cond
 4. Bear volatile
 5. Sideways quiet
 6. Sideways volatile
+
+
 
 ### 1. Bull normal
 
