@@ -7,22 +7,27 @@ output: html_notebook
 
 This work aims to develop sets of tools and procedures that will help trader to efficiently guess Financial Asset Market Type. Whether it's a Bullish or Bearish Market, Ranging, Volatile - Author believes that having this ability to detect market type and use it in trading would be of a great advantage!
 
+In order to test the approach secondary method will be developed. That is to identify best 'entry' pattern.
+
+Whenever this attempt fails, there would still be learning left! Reader would be still capable to know how to **Use Deep Learning for Regression/Classification problems**
+
 ## Task outlay
 
 Basic idea of achieveing this will be:
 
-- Manually classify data from forex pairs into periods
-- Extract MACD indicator corresponding to the periods
+- Manually classify data from forex pairs into periods of specific market periods
+- Extract MACD indicator (or any other indicator) corresponding to the periods
 - Create combined dataset with classified data
 - Fit regression NN model
 - Productionize model for the new coming data!
 - In MQL side:
     - set flags (e.g. bullish: sell = False)
     - fine tune parameters. (e.g. set up specific market period and find parameters by using optimization)
-
 - Required to read time series data, visualize it as time-series data, transform to matrix, visualize again as 3D, train the model...
 
 ## Load packages
+
+Note: use R script attached to this repository called: `6_h2o_Install.R` to install h2o on your computer
 
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 library(tidyverse)
@@ -32,6 +37,9 @@ library(h2o)
 ```
 
 ## Data read
+
+Here we can get into the financial data. Financial data can be read and refreshed using MQL side. How to do this is explained in the Udemy course.
+For the reproducibility purposes and for those who are not planning to trade sample data is available in the repository:
 
 ```{r}
 # path to actual prices
@@ -49,7 +57,7 @@ macd$X1 <- ymd_hms(macd$X1)
 
 ## Catching specific market periods
 
-I would manually change Y variable in the plot until I find siutable market condition...
+Here we would need to manually change Y variable in the plot until finding siutable market condition...
 
 1. Bull normal
 2. Bull volatile
@@ -58,15 +66,17 @@ I would manually change Y variable in the plot until I find siutable market cond
 5. Sideways quiet
 6. Sideways volatile
 
+This is 'manual' part of things with a chance of bias. Fellow reader can certainly create custom functions to select periods automatically. Author of this text is too lazy to do that and trust more to the personal brain to do so
 
+### Example of data selection for one Market Type: Bull normal
 
-### 1. Bull normal
+Code below will create time-series plot of one currency pair
 
 ```{r}
 ggplot(prices, aes(X1, X3))+geom_line()
 ```
 
-We will extract only corresponding piece...
+We will extract only corresponding piece in this case starting from November'2017...
 
 ```{r}
 # extract approximate date and choose only relevant columns
@@ -79,7 +89,7 @@ bull_norm <- prices %>% filter(X1 > "2017-11-05", X1 < "2017-11-25") %>% select(
 ggplot(bull_norm, aes(X1, X3))+geom_line()
 ```
 
-next, we can extract corresponding piece of macd dataframe:
+next, we can extract corresponding piece of `macd` dataframe:
 
 ```{r}
 macd_bull_norm <- macd %>% select(X1, X3) %>% inner_join(bull_norm, by = c("X1" = "X1"))
@@ -97,14 +107,32 @@ let's now use this function:
 macd_m_bull_norm <- macd_bull_norm %>% select(X3.x) %>% to_m(100)
 ```
 
-## Visualize new matrix in 3D
+...to convert this dataset to the matrix with 100 columns
+
+### Visualize new matrix in 3D
+
+and now we can `see` the obtained surface as 3D plot. In this case we have 14 rows. Each of these rows will contain 100 datapoints
+Tip: try to rotate obtained object and notice that majority of points are located in the positive area. Of course there were also 'corrections' hence some rows are in the negative side...
 
 ```{r}
 plot_ly(z = macd_m_bull_norm, type = "surface")
 ```
 
+Brief explanation is probably required. Why do we use 100 datapoints (or less) in one row? The meaning of those will be to give use the pattern or fingerprint of that one specific market period. The goal of our model later will be exactly this. To digest the last observations through the model and output the value or category hence recognizing what is the specific market type...
 
-## Trying to fit model now:
+Let's however make some more considerations. Why don't we say to guess our market type decision on the last 8 hours hence 8*60/15 which will result 32 M15 bars:
+
+```{r}
+macd_m_bull_norm <- macd_bull_norm %>% select(X3.x) %>% to_m(32)
+plot_ly(z = macd_m_bull_norm, type = "surface")
+
+```
+
+We have seen that the majority of our observations are in the 'positive' area, however some of the observations do not! For that reason it would be much better perhaps remove those observations that are not up to our pattern! Why not to try Deep Learning Autoencoders?
+
+### what about unsupervised learning?
+
+The key idea now will be to train Deep Learning autoencoder model on that selected dataset. We will 'send' this dataset to our JVM:
 
 ```{r}
 # start h2o virtual machine
@@ -113,6 +141,8 @@ h2o.init()
 macd_bv  <- as.h2o(x = macd_m_bull_norm, destination_frame = "macd_bull_norm")
 ```
 
+Then we will fit the model:
+
 ```{r}
 # fit the model
 deepnet_model <- h2o.deeplearning(
@@ -120,7 +150,7 @@ deepnet_model <- h2o.deeplearning(
  training_frame = macd_bv, 
  activation = "Tanh", 
  autoencoder = TRUE, 
- hidden = c(50,20,50), 
+ hidden = c(20,8,20), 
  sparse = TRUE,
  l1 = 1e-4, 
  epochs = 100)
@@ -132,95 +162,628 @@ Any time need to make a pause?
 #h2o.shutdown(prompt = F)
 ```
 
+We can now use this model to extract anomalous records. Records that would not be corresponding to our 'bullish' pattern will have higher mse value, for example: 
+
 ```{r}
 # check mse
-mod_error <- h2o.anomaly(deepnet_model, test_M4) %>% as.data.frame()
+mod_error <- h2o.anomaly(deepnet_model, macd_bv) %>% as.data.frame()
 
-mod_error
-mod_error %>% summarise(mean_mse = mean(Reconstruction.MSE))
+mod_error %>% plot.ts()
+#mod_error %>% summarise(mean_mse = mean(Reconstruction.MSE))
 ```
 
-We should also try to reduce or increase complexity of this model
+We now can find indexes of observations where mse error is higher than 0.005
 
 ```{r}
-# fit the model A
-SimpleA <- h2o.deeplearning(
- x = names(macd_bv), 
- training_frame = macd_bv, 
- activation = "Tanh", 
- autoencoder = TRUE, 
- hidden = c(50,20,50), 
- sparse = TRUE,
- l1 = 1e-4, 
- epochs = 100)
-mod_errA <- h2o.anomaly(SimpleA, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-# fit the model B
-SimpleB <- h2o.deeplearning(
- x = names(macd_bv), 
- training_frame = macd_bv, 
- activation = "Tanh", 
- autoencoder = TRUE, 
- hidden = c(70,50,70), 
- sparse = TRUE,
- l1 = 1e-4, 
- epochs = 100)
-mod_errB <- h2o.anomaly(SimpleB, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-# fit the model C
-SimpleC <- h2o.deeplearning(
- x = names(macd_bv), 
- training_frame = macd_bv, 
- activation = "Tanh", 
- autoencoder = TRUE, 
- hidden = c(30,10,30), 
- sparse = TRUE,
- l1 = 1e-4, 
- epochs = 100)
-mod_errC <- h2o.anomaly(SimpleC, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-# fit the model D
-SimpleD <- h2o.deeplearning(
- x = names(macd_bv), 
- training_frame = macd_bv, 
- activation = "Tanh", 
- autoencoder = TRUE, 
- hidden = c(100,20,100), 
- sparse = TRUE,
- l1 = 1e-4, 
- epochs = 100)
-mod_errD <- h2o.anomaly(SimpleD, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-# fit the model E
-SimpleE <- h2o.deeplearning(
- x = names(macd_bv), 
- training_frame = macd_bv, 
- activation = "Tanh", 
- autoencoder = TRUE, 
- hidden = c(70,50,20,50,70), 
- sparse = TRUE,
- l1 = 1e-4, 
- epochs = 100)
-mod_errE <- h2o.anomaly(SimpleE, macd_bv) %>% as.data.frame() %>% summarise(mean_mse = mean(Reconstruction.MSE))
-
+row_outliers <- which(mod_error > 0.005)
+row_cleaned  <- which(mod_error < 0.005)
+macd_m_bull_norm_filt <- macd_m_bull_norm[row_cleaned, ]
+macd_m_bull_norm_outl <- macd_m_bull_norm[row_outliers, ]
 ```
 
-Summarise what we get
+Finally let's try to see if we could now filter the outliers:
 
 ```{r}
-mod_errA
-mod_errB
-mod_errC
-mod_errD
-mod_errE
+# outliers (not bullish)
+plot_ly(z = macd_m_bull_norm_outl, type = "surface")
+```
+
+8 observations were filtered...
+
+```{r}
+# filtered ('only' bullish)
+plot_ly(z = macd_m_bull_norm_filt, type = "surface")
+```
+
+Well it seems that we could filter our observations but not completely. Besides, it is probably questionable if we should do that in the first place...
+
+Next we can create a code that will help to select data for every market type and combine that to one specific dataframe
+
+```{r}
+#### Manually Selecting data... =================================================
+# Market Periods
+# 1. Bull normal
+# 2. Bull volatile
+# 3. Bear normal
+# 4. Bear volatile
+# 5. Sideways quiet
+# 6. Sideways volatile
+# Choose the asset corresponding to this period /find by replacing 'y' argument/
+ggplot(prices, aes(X1, X3))+geom_line()
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-11-05", X1 < "2017-11-25") %>% select(X1, X3)
+
+# Visualize it to confirm 
+ggplot(price_df, aes(X1, X3))+geom_line()
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X3) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# Visualize both things together
+ggplot(macd_df, aes(X1, X3.y, col = X3.x))+geom_line()
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+
+macd_m <- macd_df %>% select(X3.x) %>% to_m(32)
+
+#########################################################################
+
+# add new column to this matrix with value 1
+macd_m_1 <- transform(macd_m, M_T = 10)
+
+##########################################################################
+
+# Choose the asset corresponding to this period /find by replacing 'y' argument/
+ggplot(prices, aes(X1, X4))+geom_line()
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-10-02", X1 < "2017-10-07") %>% select(X1, X4)
+
+# Visualize it to confirm 
+ggplot(price_df, aes(X1, X4))+geom_line()
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X4) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# Visualize both things together
+ggplot(macd_df, aes(X1, X4.y, col = X4.x))+geom_line()
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X4.x) %>% to_m(32)
+
+#########################################################################
+macd_m_2 <- transform(macd_m, M_T = 20) 
+#########################################################################
+
+# Choose the asset corresponding to this period /find by replacing 'y' argument/
+ggplot(prices, aes(X1, X12))+geom_line()
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-09-20", X1 < "2017-10-20") %>% select(X1, X12)
+
+# Visualize it to confirm 
+ggplot(price_df, aes(X1, X12))+geom_line()
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X12) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# Visualize both things together
+ggplot(macd_df, aes(X1, X12.y, col = X12.x))+geom_line()
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X12.x) %>% to_m(32)
+
+#########################################################################
+macd_m_3 <- transform(macd_m, M_T = 30)
+#########################################################################
+
+# Choose the asset corresponding to this period /find by replacing 'y' argument/
+ggplot(prices, aes(X1, X6))+geom_line()
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-10-18", X1 < "2017-10-30") %>% select(X1, X6)
+
+# Visualize it to confirm 
+ggplot(price_df, aes(X1, X6))+geom_line()
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X6) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# Visualize both things together
+ggplot(macd_df, aes(X1, X6.y, col = X6.x))+geom_line()
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X6.x) %>% to_m(32)
+
+#########################################################################
+macd_m_4 <- transform(macd_m, M_T = 40)
+#########################################################################
+
+# Choose the asset corresponding to this period /find by replacing 'y' argument/
+ggplot(prices, aes(X1, X11))+geom_line()
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-09-20", X1 < "2017-10-24") %>% select(X1, X11)
+
+# Visualize it to confirm 
+ggplot(price_df, aes(X1, X11))+geom_line()
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X11) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# Visualize both things together
+ggplot(macd_df, aes(X1, X11.y, col = X11.x))+geom_line()
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X11.x) %>% to_m(32)
+
+#########################################################################
+macd_m_5 <- transform(macd_m, M_T = 50) 
+#########################################################################
+# Choose the asset corresponding to this period /find by replacing 'y' argument/
+ggplot(prices, aes(X1, X13))+geom_line()
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-10-10", X1 < "2017-11-20") %>% select(X1, X13)
+
+# Visualize it to confirm 
+ggplot(price_df, aes(X1, X13))+geom_line()
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X13) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# Visualize both things together
+ggplot(macd_df, aes(X1, X13.y, col = X13.x))+geom_line()
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X13.x) %>% to_m(32)
+
+#########################################################################
+macd_m_6 <- transform(macd_m, M_T = 60)
+#########################################################################
+#########################################################################
+#########################################################################
+
+# Combine all of that :)
+macd_ML1 <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
+
+```
+
+Now we have our labelled dataset
+
+```{r}
+## Visualize new matrix in 3D
+plot_ly(z = as.matrix(macd_ML1[,1:32]), type = "surface")
+```
+
+## Regression model
+
+Next we can fit the model just by specifying what are the 'Label' column. In this case our label is a numeric.
+
+Model we will fit in this case will have configuration:
+
+Inputs  | hidden layer1 | hidden layer2 | Output
+------- | ------------- | ------------- | -------------
+32      |       100     |      100      |    1
+
+```{r}
+#### Fitting Deep Learning Net =================================================
+## Fit model now:
+# start h2o virtual machine
+h2o.init()
+# load data into h2o environment
+macd_ML  <- as.h2o(x = macd_ML1, destination_frame = "macd_ML")
+
+# fit models from simplest to more complex
+ModelA <- h2o.deeplearning(
+  x = names(macd_ML[,1:32]), 
+  y = "M_T",
+  training_frame = macd_ML,
+  activation = "Tanh",
+  overwrite_with_best_model = TRUE, 
+  autoencoder = FALSE, 
+  hidden = c(100,100), 
+  loss = "Automatic",
+  sparse = TRUE,
+  l1 = 1e-4,
+  distribution = "AUTO",
+  stopping_metric = "MSE",
+  #balance_classes = T,
+  epochs = 600)
+```
+
+It takes a while until it is trained:
+
+```{r}
+ModelA
+summary(ModelA)
+h2o.performance(ModelA)
 ```
 
 
-This model A was already good, the MSE slightly reduced moving to sligtly complex one... we will leave Model_B...
+
+```{r}
+# to return predicted classes
+predicted <- h2o.predict(ModelA, macd_ML) %>% as.data.frame()
+```
+
+Notice that model is making mistakes sometimes even returning negative values! 
+
+In fact we should try different models until results are better while choosing less possible complexity model, for example:
+
+
+```{r}
+# fit models from simplest to more complex
+ModelB <- h2o.deeplearning(
+  x = names(macd_ML[,1:32]), 
+  y = "M_T",
+  training_frame = macd_ML,
+  activation = "Tanh",
+  overwrite_with_best_model = TRUE, 
+  autoencoder = FALSE, 
+  hidden = c(30,20,30), 
+  loss = "Automatic",
+  sparse = TRUE,
+  l1 = 1e-4,
+  distribution = "AUTO",
+  stopping_metric = "MSE",
+  #balance_classes = T,
+  epochs = 600)
+```
+
+
+```{r}
+h2o.performance(ModelB)
+```
+
+
+
+
+```{r}
+# fit models from simplest to more complex
+ModelC <- h2o.deeplearning(
+  x = names(macd_ML[,1:32]), 
+  y = "M_T",
+  training_frame = macd_ML,
+  activation = "Tanh",
+  overwrite_with_best_model = TRUE, 
+  autoencoder = FALSE, 
+  hidden = c(30,30), 
+  loss = "Automatic",
+  sparse = TRUE,
+  l1 = 1e-4,
+  distribution = "AUTO",
+  stopping_metric = "MSE",
+  #balance_classes = T,
+  epochs = 600)
+```
+
+
+```{r}
+h2o.performance(ModelC)
+```
+
+
+```{r}
+# fit models from simplest to more complex
+ModelD <- h2o.deeplearning(
+  x = names(macd_ML[,1:32]), 
+  y = "M_T",
+  training_frame = macd_ML,
+  activation = "Tanh",
+  overwrite_with_best_model = TRUE, 
+  autoencoder = FALSE, 
+  hidden = c(200,100,200), 
+  loss = "Automatic",
+  sparse = TRUE,
+  l1 = 1e-4,
+  distribution = "AUTO",
+  stopping_metric = "MSE",
+  #balance_classes = T,
+  epochs = 600)
+```
+
+
+```{r}
+h2o.performance(ModelD)
+```
+
+We can also try other parameters in Model A for example computing variables importances (not relevant for this task)
+
+```{r}
+# fit models from simplest to more complex
+ModelA <- h2o.deeplearning(
+  x = names(macd_ML[,1:32]), 
+  y = "M_T",
+  training_frame = macd_ML,
+  activation = "Tanh",
+  overwrite_with_best_model = TRUE, 
+  autoencoder = FALSE, 
+  hidden = c(100,100), 
+  loss = "Automatic",
+  sparse = TRUE,
+  l1 = 1e-4,
+  distribution = "AUTO",
+  stopping_metric = "MSE",
+  #balance_classes = T,
+  variable_importances = T,
+  epochs = 600)
+```
+
+
+```{r}
+# computing variable importances
+h2o.varimp(ModelA) %>% as.data.frame() %>% head()
+```
+```{r}
+
+# computing variable importances
+h2o.varimp(ModelA) %>% as.data.frame() %>% tail()
+
+```
+
+```{r}
+# plotting that
+my_variables <- h2o.varimp(ModelA) %>% as.data.frame() 
+
+my_variables$percentage %>% plot()
+```
+
+### searching hyperparameters
+
+```{r}
+hyper_params <- list(
+  activation=c("Rectifier","Tanh","Maxout","RectifierWithDropout","TanhWithDropout","MaxoutWithDropout"),
+  hidden=list(c(100,100),c(50,50),c(30,30,30),c(25,25,25,25)),
+  input_dropout_ratio=c(0,0.05),
+  l1=seq(0,1e-4,1e-6),
+  l2=seq(0,1e-4,1e-6)
+)
+```
+
+This is the method of finding the best model running it at once:
+see https://github.com/h2oai/h2o-tutorials/tree/master/tutorials/deeplearning
+
+```{r}
+## Stop once the top 5 models are within 1% of each other (i.e., the windowed average varies less than 1%)
+search_criteria = list(strategy = "RandomDiscrete", max_runtime_secs = 360, max_models = 100, seed=1234567, stopping_rounds=5, stopping_tolerance=1e-2)
+dl_random_grid <- h2o.grid(
+  algorithm="deeplearning",
+  #grid_id = "dl_grid_random",
+  training_frame=macd_ML,
+  x=names(macd_ML[,1:32]), 
+  y="M_T",
+  epochs=1,
+  stopping_metric="MSE",
+  stopping_tolerance=1e-2,        ## stop when logloss does not improve by >=1% for 2 scoring events
+  stopping_rounds=2,
+  score_validation_samples=10000, ## downsample validation set for faster scoring
+  score_duty_cycle=0.025,         ## don't score more than 2.5% of the wall time
+  max_w2=10,                      ## can help improve stability for Rectifier
+  hyper_params = hyper_params,
+  search_criteria = search_criteria
+)                                
+grid <- h2o.getGrid("dl_grid_random",sort_by="MSE",decreasing=FALSE)
+grid
+```
+
+... need time to study this result, isn't it???
+
+## Let's try to predict?
+
+Let's assume we have the latest information... what will the model will say?
+
+```{r}
+macd_latest <- macd_ML1[200, 1:32] #label = 50
+macd_label  <- macd_ML1[200, 33] #label = 50
+```
+
+```{r}
+# load data into h2o environment
+macd_200  <- as.h2o(x = macd_latest, destination_frame = "macd_200")
+
+pred200 <- h2o.predict(ModelA, macd_200) %>% as.data.frame()
+
+pred200
+```
+
+
+
+## What about Classification Model?
+
+In case our model will have a categorical variable as a label we can attempt to go for classification modelling
+
+I would then re-create dataset by transforming to categorical variables
+
+```{r}
+#### Manually Selecting data... =================================================
+# Market Periods
+# 1. Bull normal
+# 2. Bull volatile
+# 3. Bear normal
+# 4. Bear volatile
+# 5. Sideways quiet
+# 6. Sideways volatile
+
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-11-05", X1 < "2017-11-25") %>% select(X1, X3)
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X3) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X3.x) %>% to_m(32)
+
+#########################################################################
+
+# add new column to this matrix with value 1
+macd_m_1 <- transform(macd_m, M_T = "one")
+
+##########################################################################
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-10-02", X1 < "2017-10-07") %>% select(X1, X4)
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X4) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X4.x) %>% to_m(32)
+
+#########################################################################
+macd_m_2 <- transform(macd_m, M_T = "two") 
+#########################################################################
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-09-20", X1 < "2017-10-20") %>% select(X1, X12)
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X12) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X12.x) %>% to_m(32)
+
+#########################################################################
+macd_m_3 <- transform(macd_m, M_T = "tree")
+#########################################################################
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-10-18", X1 < "2017-10-30") %>% select(X1, X6)
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X6) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X6.x) %>% to_m(32)
+
+#########################################################################
+macd_m_4 <- transform(macd_m, M_T = "four")
+#########################################################################
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-09-20", X1 < "2017-10-24") %>% select(X1, X11)
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X11) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X11.x) %>% to_m(32)
+
+#########################################################################
+macd_m_5 <- transform(macd_m, M_T = "five") 
+#########################################################################
+
+# Extract approximate date and choose only relevant columns
+price_df <- prices %>% filter(X1 > "2017-10-10", X1 < "2017-11-20") %>% select(X1, X13)
+
+# Extract corresponding piece of macd dataframe:
+macd_df <- macd %>% select(X1, X13) %>% inner_join(price_df, by = c("X1" = "X1"))
+
+# transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
+macd_m <- macd_df %>% select(X13.x) %>% to_m(32)
+
+#########################################################################
+macd_m_6 <- transform(macd_m, M_T = "six")
+#########################################################################
+#########################################################################
+#########################################################################
+
+# Combine all of that :)
+macd_ML2 <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
+```
+
+
+
+```{r}
+# fit models from simplest to more complex
+h2o.init()
+# load data into h2o environment
+macd_Cat  <- as.h2o(x = macd_ML2, destination_frame = "macd_Cat")
+
+ModelCA <- h2o.deeplearning(
+  x = names(macd_Cat[,1:32]), 
+  y = "M_T",
+  training_frame = macd_Cat,
+  activation = "Tanh",
+  overwrite_with_best_model = TRUE, 
+  autoencoder = FALSE, 
+  hidden = c(100,100), 
+  loss = "Automatic",
+  sparse = TRUE,
+  l1 = 1e-4,
+  distribution = "AUTO",
+  stopping_metric = "AUTO",
+  #balance_classes = T,
+  #variable_importances = T,
+  epochs = 600)
+```
+
+```{r}
+summary(ModelCA)
+h2o.performance(ModelCA)
+```
+
+## Let's try to predict?
+
+Let's assume we have the latest information... what will the model will say?
+
+```{r}
+macd_latest <- macd_ML2[200, 1:32] #label = five
+macd_latest$M_T <- "one"
+macd_label  <- macd_ML2[200, 33] #label = five
+```
+
+```{r}
+# load data into h2o environment
+macd_200  <- as.h2o(x = macd_latest, destination_frame = "macd_200")
+
+pred200 <- h2o.predict(ModelCA, macd_200) %>% as.data.frame()
+
+pred200$predict
+```
+
+```{r}
+# more trials
+ModelCA1 <- h2o.deeplearning(
+  x = names(macd_Cat[,1:32]), 
+  y = "M_T",
+  training_frame = macd_Cat,
+  activation = "Tanh",
+  overwrite_with_best_model = TRUE, 
+  autoencoder = FALSE, 
+  hidden = c(200,200), 
+  loss = "Automatic",
+  sparse = TRUE,
+  l1 = 1e-4,
+  distribution = "AUTO",
+  stopping_metric = "AUTO",
+  #balance_classes = T,
+  #variable_importances = T,
+  epochs = 600)
+```
+
+```{r}
+summary(ModelCA1)
+```
+
+There are pretty different results... potentially the error rate is high!
+
+```{r}
+h2o.performance(ModelCA1)
+```
+
 
 ## Save the model
 
-```{r}
-if(!file.exists("models/bull_norm.bin")){
-h2o.saveModel(SimpleA, "models/bull_norm.bin")
-}
+In case we want to save the model persistently we can do so
 
+```{r}
+# save the model, parameter force = TRUE will overwrite existing file
+h2o.saveModel(SimpleA, "models/bull_norm.bin", force = TRUE)
+
+# shutdown...
 h2o.shutdown(prompt = F)
 ```
 
@@ -273,7 +836,7 @@ to_m <- function(x, n_cols) {
 
 ## Install fresh copy of h2o
 
-See www.h2o.ai
+See www.h2o.ai --> Download --> Install from R
 
 ```{r eval=FALSE, include=FALSE}
 # The following two commands remove any previously installed H2O packages for R.
