@@ -93,7 +93,7 @@ Pairs = c("EURUSD", "GBPUSD", "AUDUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY",
           "AUDNZD", "CADJPY", "CHFJPY", "NZDJPY", "NZDCAD", "NZDCHF", "CADCHF")   
 
 # Prepare data frame with last 32 observations and remove date/time column (6 hours)
-macd_100 <- macd %>% select(c(X2:X29)) %>% head(32)
+macd_100 <- macd %>% select(c(X2:X29)) %>% head(64)
 
 # Rename the column?
 names(macd_100) <- Pairs
@@ -118,8 +118,8 @@ for (PAIR in Pairs) {
   # PAIR <- "EURUSD"
   df <- macd_100 %>% select(PAIR)
   my_market <- evaluate_market_type(x = df,
-                                    model_path = "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models/regression.bin/DeepLearning_model_R_1514534458554_3",
-                                    num_cols = 32) %>% as.data.frame()
+                                    model_path = "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models/regression.bin/DL_Regression",
+                                    num_cols = 64) %>% as.data.frame()
   names(my_market) <- PAIR
   write_csv(my_market, file.path(sbx, paste0("AI_MarketType_", PAIR, ".csv")))
 }

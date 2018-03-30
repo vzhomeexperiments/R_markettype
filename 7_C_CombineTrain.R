@@ -18,7 +18,7 @@ source("to_m.R")
 prices <- read_csv("AI_CP15.csv", col_names = F)
 prices$X1 <- ymd_hms(prices$X1)
 # load macd indicator of 28 currencies
-macd <- read_csv("AI_Stoch15.csv", col_names = F)
+macd <- read_csv("AI_Macd15.csv", col_names = F)
 macd$X1 <- ymd_hms(macd$X1)
 
 #### Manually Selecting data... =================================================
@@ -193,7 +193,7 @@ macd_ML1 <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
 
 
 ## Visualize new matrix in 3D
-plot_ly(z = as.matrix(macd_ML1[,1:32]), type = "surface")
+plot_ly(z = as.matrix(macd_ML1[,1:64]), type = "surface")
 #### Fitting Deep Learning Net =================================================
 ## Fit model now:
 # start h2o virtual machine
@@ -204,7 +204,7 @@ macd_ML  <- as.h2o(x = macd_ML1, destination_frame = "macd_ML")
 # fit models from simplest to more complex
 ModelC <- h2o.deeplearning(
   model_id = "DL_Classification",
-  x = names(macd_ML[,1:32]), 
+  x = names(macd_ML[,1:64]), 
   y = "M_T",
   training_frame = macd_ML,
   activation = "Tanh",

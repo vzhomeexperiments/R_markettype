@@ -18,7 +18,7 @@ source("to_m.R")
 prices <- read_csv("AI_CP15.csv", col_names = F)
 prices$X1 <- ymd_hms(prices$X1)
 # load macd indicator of 28 currencies /use "AI_Macd15.csv" or "AI_Stoch15.csv" or... other data...
-macd <- read_csv("AI_Stoch15.csv", col_names = F)
+macd <- read_csv("AI_Macd15.csv", col_names = F)
 macd$X1 <- ymd_hms(macd$X1)
 
 #### Manually Selecting data... =================================================
@@ -48,7 +48,7 @@ macd_df <- macd %>% select(X1, X5) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X5.y, col = X5.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m <- macd_df %>% select(X5.x) %>% to_m(32)
+macd_m <- macd_df %>% select(X5.x) %>% to_m(64)
 #########################################################################
 # add new column to this matrix with value BUN
 macd_m_1 <- transform(macd_m, M_T = 1)
@@ -74,7 +74,7 @@ macd_df <- macd %>% select(X1, X15) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X15.y, col = X15.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m <- macd_df %>% select(X15.x) %>% to_m(32)
+macd_m <- macd_df %>% select(X15.x) %>% to_m(64)
 
 #########################################################################
 macd_m_2 <- transform(macd_m, M_T = 2) 
@@ -100,7 +100,7 @@ macd_df <- macd %>% select(X1, X29) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X29.y, col = X29.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m <- macd_df %>% select(X29.x) %>% to_m(32)
+macd_m <- macd_df %>% select(X29.x) %>% to_m(64)
 
 #########################################################################
 macd_m_3 <- transform(macd_m, M_T = 3)
@@ -126,7 +126,7 @@ macd_df <- macd %>% select(X1, X7) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X7.y, col = X7.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m <- macd_df %>% select(X7.x) %>% to_m(32)
+macd_m <- macd_df %>% select(X7.x) %>% to_m(64)
 
 #########################################################################
 macd_m_4 <- transform(macd_m, M_T = 4)
@@ -152,7 +152,7 @@ macd_df <- macd %>% select(X1, X2) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X2.y, col = X2.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m <- macd_df %>% select(X2.x) %>% to_m(32)
+macd_m <- macd_df %>% select(X2.x) %>% to_m(64)
 
 #########################################################################
 macd_m_5 <- transform(macd_m, M_T = 5) 
@@ -177,7 +177,7 @@ macd_df <- macd %>% select(X1, X9) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X9.y, col = X9.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m <- macd_df %>% select(X9.x) %>% to_m(32)
+macd_m <- macd_df %>% select(X9.x) %>% to_m(64)
 
 #########################################################################
 macd_m_6 <- transform(macd_m, M_T = 6)
@@ -204,13 +204,13 @@ macd_ML  <- as.h2o(x = macd_ML1, destination_frame = "macd_ML")
 # fit models from simplest to more complex
 ModelR <- h2o.deeplearning(
   model_id = "DL_Regression",
-  x = names(macd_ML[,1:32]), 
+  x = names(macd_ML[,1:64]), 
   y = "M_T",
   training_frame = macd_ML,
   activation = "Tanh",
   overwrite_with_best_model = TRUE, 
   autoencoder = FALSE, 
-  hidden = c(30,30,10,5), 
+  hidden = c(100,100), 
   loss = "Automatic",
   sparse = TRUE,
   l1 = 1e-4,
