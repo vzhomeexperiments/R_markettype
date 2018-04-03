@@ -31,3 +31,5 @@ tutorial.R
 *.Rout
 9_visualizeModel.Rmd
 9_visualizeModel.nb.html
+Research.nb.html
+Research.Rmd
