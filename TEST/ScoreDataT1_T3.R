@@ -6,8 +6,8 @@
 library(tidyverse)
 library(lubridate)
 library(h2o)
-source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/TEST/evaluate_market_type.R")
-source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/TEST/to_m.R")
+source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/evaluate_market_type.R")
+source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/to_m.R")
 
 # Defining variables to be re-used in the code
 sbx <- "C:/Program Files (x86)/FxPro - Terminal2/MQL4/Files"
