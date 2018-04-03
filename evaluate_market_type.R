@@ -9,7 +9,7 @@
 #       also to shut it down with h2o.shutdown(prompt = F)
 
 evaluate_market_type <- function(x, model_path, num_cols){
-  # x is a 1 column dataframe containing 32 observations
+  # x is a 1 column dataframe containing 32 or 64 observations
   # Convert to matrix
   X_m <- to_m(x, num_cols) %>% as.data.frame()
   colnames(X_m) <- c(paste("X",1:num_cols,sep=""))
