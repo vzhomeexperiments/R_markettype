@@ -10,16 +10,23 @@
 
 evaluate_market_type <- function(x, model_path, num_cols){
   # x is a 1 column dataframe containing 32 or 64 observations
+  # x <- read_rds("macd_df.rds")
+  # num_cols <- 64
+  # model_path <- "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models/regression.bin/DL_Regression"
+  # model_path <- "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models/classification.bin/DL_Classification"
+  
+  # load models
+  m1 <- h2o.loadModel(model_path) 
+  
+  
+  if(class(m1)[1] == "H2ORegressionModel") {
   # Convert to matrix
   X_m <- to_m(x, num_cols) %>% as.data.frame()
   colnames(X_m) <- c(paste("X",1:num_cols,sep=""))
   # load the dataset to h2o 
   test  <- as.h2o(x = X_m, destination_frame = "test")
   
-  # load all models
-  m1 <- h2o.loadModel(model_path) 
-  
-  # retrieve the error on each
+  # retrieve the predicted market type value
   e1 <- h2o.predict(m1, test) 
   
   # round the number to achieve class
@@ -29,6 +36,26 @@ evaluate_market_type <- function(x, model_path, num_cols){
   if(result <= 0 || result > 6) {element <- -1} else {element <- result}
   
   # output result of prediction from the function
-  return(element)
+  return(element) 
+  
+  } 
+  
+  if(class(m1)[1] == "H2OMultinomialModel") {
+    
+    # Convert to matrix
+    X_m <- to_m(x, num_cols) %>% as.data.frame() 
+    colnames(X_m) <- c(paste("X",1:num_cols,sep=""))
+    X_m <- X_m %>% transform(M_T = "RAV")
+    
+    # load the dataset to h2o 
+    test  <- as.h2o(x = X_m, destination_frame = "test")
+    
+    # retrieve the predicted value of the market type
+    e1 <- h2o.predict(m1, test) %>% as.vector()
+    
+    # output result of prediction from the function
+    return(e1)
+    
+  }
   
 }

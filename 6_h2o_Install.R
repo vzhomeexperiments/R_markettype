@@ -19,3 +19,4 @@ h2o.init(nthreads = 2)
 
 # Shutdown
 h2o.shutdown(prompt = FALSE)
+

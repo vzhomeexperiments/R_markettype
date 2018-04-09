@@ -62,7 +62,7 @@ macd_m_1 <- transform(macd_m, M_T = 1)
 ggplot(prices, aes(X1, X15))+geom_line()
 
 # Extract approximate date and choose only relevant columns
-price_df <- prices %>% filter(X1 > "2018-03-10", X1 < "2018-04-25") %>% select(X1, X15)
+price_df <- prices %>% filter(X1 > "2017-10-10", X1 < "2018-04-25") %>% select(X1, X15)
 
 # Visualize it to confirm 
 ggplot(price_df, aes(X1, X15))+geom_line()
@@ -197,7 +197,7 @@ plot_ly(z = as.matrix(macd_ML1[,1:32]), type = "surface")
 #### Fitting Deep Learning Net =================================================
 ## Fit model now:
 # start h2o virtual machine
-h2o.init()
+h2o.init()  #nthreads = 4 use maximum amount of processors for model training
 # load data into h2o environment
 macd_ML  <- as.h2o(x = macd_ML1, destination_frame = "macd_ML")
 
@@ -210,14 +210,14 @@ ModelR <- h2o.deeplearning(
   activation = "Tanh",
   overwrite_with_best_model = TRUE, 
   autoencoder = FALSE, 
-  hidden = c(100,100), 
-  loss = "Automatic",
+  hidden = c(100,100),  #will also work e.g: c(55,34,21),
+  loss = "Quadratic",
   sparse = TRUE,
   l1 = 1e-4,
-  distribution = "AUTO",
-  stopping_metric = "AUTO",
+  distribution = "gaussian",
+  stopping_metric = "MSE",
   #balance_classes = T,
-  epochs = 200)
+  epochs = 500)
 
 #ModelR
 summary(ModelR)
@@ -225,10 +225,14 @@ h2o.performance(ModelR)
 
 # to return predicted classes
 predicted <- h2o.predict(ModelR, macd_ML) %>% as.data.frame()
-
+# to join them together
+compared <- predicted %>% round() %>% bind_cols(macd_ML1[65])
 
 ## Save the model
 h2o.saveModel(ModelR, "models/regression.bin", force = TRUE)
+
+# to load the model later
+h2o.loadModel("models/regression.bin/DL_Regression")
 
 # shutdown the virtual machine
 h2o.shutdown(prompt = F)

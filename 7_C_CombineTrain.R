@@ -187,19 +187,19 @@ macd_m_6 <- transform(macd_m, M_T = "RAV")
 #########################################################################
 
 # Combine all of that :)
-macd_ML1 <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
+macd_ML2 <- rbind(macd_m_1,macd_m_2,macd_m_3,macd_m_4,macd_m_5,macd_m_6)
 
 ### NOTE Number of rows Matrices needs to be roughly equal
 
 
 ## Visualize new matrix in 3D
-plot_ly(z = as.matrix(macd_ML1[,1:64]), type = "surface")
+plot_ly(z = as.matrix(macd_ML2[,1:64]), type = "surface")
 #### Fitting Deep Learning Net =================================================
 ## Fit model now:
 # start h2o virtual machine
 h2o.init()
 # load data into h2o environment
-macd_ML  <- as.h2o(x = macd_ML1, destination_frame = "macd_ML")
+macd_ML  <- as.h2o(x = macd_ML2, destination_frame = "macd_ML")
 
 # fit models from simplest to more complex
 ModelC <- h2o.deeplearning(
@@ -216,7 +216,7 @@ ModelC <- h2o.deeplearning(
   l1 = 1e-4,
   distribution = "AUTO",
   stopping_metric = "AUTO",
-  balance_classes = T,
+  #balance_classes = T,
   epochs = 200)
 
 #ModelC
@@ -224,11 +224,13 @@ summary(ModelC)
 h2o.performance(ModelC)
 
 # to return predicted classes
-predicted <- h2o.predict(ModelC, macd_ML) %>% as.data.frame()
-
+predicted <- h2o.predict(ModelC, macd_ML)  %>% as.data.frame()
 
 ## Save the model
 h2o.saveModel(ModelC, "models/classification.bin", force = TRUE)
+
+# to load the model later
+h2o.loadModel("models/classification.bin/DL_Classification")
 
 # shutdown the virtual machine
 h2o.shutdown(prompt = F)
