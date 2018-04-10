@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------------------
 # R Script to score current period of each currency based on the newly entered data
 # ----------------------------------------------------------------------------------------
-
+# Note: select desired model in lines 41/42
 # Expected output: Table containing market type number for every of the 28 currency pairs
 library(tidyverse)
 library(lubridate)
@@ -45,7 +45,5 @@ for (PAIR in Pairs) {
   write_csv(my_market, file.path(sbx, paste0("AI_MarketType_", PAIR, ".csv")))
 }
 
-
 # shutdown
 h2o.shutdown(prompt = F)
-
