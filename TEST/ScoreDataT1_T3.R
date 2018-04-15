@@ -6,7 +6,7 @@
 library(tidyverse)
 library(lubridate)
 library(h2o)
-source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/evaluate_market_type.R")
+source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/TEST/evaluate_market_type.R")
 source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/to_m.R")
 
 # Defining variables to be re-used in the code
@@ -44,7 +44,8 @@ for (PAIR in Pairs) {
   df <- macd_100 %>% select(PAIR)
   # Use function to score the data to the model
   my_market <- evaluate_market_type(x = df,
-                                    model_path = "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models/regression.bin/DL_Regression",
+                                    #model_path = "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models/regression.bin/DL_Regression",
+                                    model_path = "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models/classification.bin/DL_Classification",
                                     num_cols = 64) %>% as.data.frame()
   # Return the name of the output
   names(my_market) <- PAIR
