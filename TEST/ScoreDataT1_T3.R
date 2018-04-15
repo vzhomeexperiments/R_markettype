@@ -50,6 +50,7 @@ for (PAIR in Pairs) {
   # Return the name of the output
   names(my_market) <- PAIR
   # Write obtained result to the sandboxes
+  #write_csv(my_market, file.path(sbx, paste0("AI_MarketType_", PAIR, ".csv")))
   write_csv(my_market, file.path(sbx_masterT1, paste0("AI_MarketType_", PAIR, ".csv")))
   write_csv(my_market, file.path(sbx_slaveT3,  paste0("AI_MarketType_", PAIR, ".csv")))
   write_csv(my_market, file.path(sbx_slaveT4,  paste0("AI_MarketType_", PAIR, ".csv")))
