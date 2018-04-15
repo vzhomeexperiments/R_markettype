@@ -14,6 +14,7 @@ sbx <- "C:/Program Files (x86)/FxPro - Terminal2/MQL4/Files"
 sbx_masterT1 <- "C:/Program Files (x86)/FxPro - Terminal1/MQL4/Files"
 sbx_slaveT3 <- "C:/Program Files (x86)/FxPro - Terminal3/MQL4/Files"
 sbx_slaveT4 <- "C:/Program Files (x86)/FxPro - Terminal4/MQL4/Files"
+chart_period <- 15 #this variable will define market type period
 
 # Vector of currency pairs
 Pairs = c("EURUSD", "GBPUSD", "AUDUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY",
@@ -22,8 +23,8 @@ Pairs = c("EURUSD", "GBPUSD", "AUDUSD", "NZDUSD", "USDCAD", "USDCHF", "USDJPY",
           "AUDNZD", "CADJPY", "CHFJPY", "NZDJPY", "NZDCAD", "NZDCHF", "CADCHF")   
 
 # Reading the data from the Sandbox of Terminal 2 --> !!!Make sure that DataWriter robot is attached and working in Terminal 2!!!
-sbx_price <- file.path(sbx, "AI_CP15.csv")
-sbx_macd <- file.path(sbx, "AI_Macd15.csv")
+sbx_price <- file.path(sbx, paste0("AI_CP",chart_period,".csv"))
+sbx_macd <- file.path(sbx, paste0("AI_Macd", chart_period,".csv"))
 #price <- read_csv(sbx_price, col_names = F)
 macd <- read_csv(sbx_macd, col_names = F, col_types = "cdddddddddddddddddddddddddddd")
 macd$X1 <- ymd_hms(macd$X1)
@@ -50,10 +51,10 @@ for (PAIR in Pairs) {
   # Return the name of the output
   names(my_market) <- PAIR
   # Write obtained result to the sandboxes
-  #write_csv(my_market, file.path(sbx, paste0("AI_MarketType_", PAIR, ".csv")))
-  write_csv(my_market, file.path(sbx_masterT1, paste0("AI_MarketType_", PAIR, ".csv")))
-  write_csv(my_market, file.path(sbx_slaveT3,  paste0("AI_MarketType_", PAIR, ".csv")))
-  write_csv(my_market, file.path(sbx_slaveT4,  paste0("AI_MarketType_", PAIR, ".csv")))
+  #write_csv(my_market, file.path(sbx, paste0("AI_MarketType_", PAIR, chart_period, ".csv")))
+  write_csv(my_market, file.path(sbx_masterT1, paste0("AI_MarketType_", PAIR, chart_period, ".csv")))
+  write_csv(my_market, file.path(sbx_slaveT3,  paste0("AI_MarketType_", PAIR, chart_period, ".csv")))
+  write_csv(my_market, file.path(sbx_slaveT4,  paste0("AI_MarketType_", PAIR, chart_period, ".csv")))
 }
 
 
