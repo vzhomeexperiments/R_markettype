@@ -52,7 +52,7 @@ evaluate_market_type <- function(x, model_path, num_cols){
     test  <- as.h2o(x = X_m, destination_frame = "test")
     
     # retrieve the predicted value of the market type
-    e1 <- h2o.predict(m1, test) %>% as.vector() %>% head(1)
+    e1 <- h2o.predict(m1, test) %>% as.data.frame()
     
     # output result of prediction from the function
     return(e1)
