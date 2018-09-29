@@ -29,8 +29,11 @@ macd_ML2 <- read_rds(file.path(data_initial_path, "macd_ML2.rds")) %>% mutate_at
 macd_ai_classified <- read_rds(file.path(data_update_path, "macd_ai_classified.rds")) %>% 
 # keep the joined data for the next update
   bind_rows(macd_ML2) %>% 
-  # write the data
+  # write the data to the data initial folder
   write_rds(file.path(data_initial_path, "macd_ML2.rds"))
+
+# delete the data collected so far
+file.remove(file.path(data_update_path, "macd_ai_classified.rds"))
 
 # restore label column as factor
 macd_ML2 <- macd_ai_classified %>% mutate_at("M_T", as.factor)
