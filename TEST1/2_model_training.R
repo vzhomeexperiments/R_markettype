@@ -9,9 +9,9 @@
 # load libraries to use and custom functions
 library(tidyverse)
 library(h2o)
-library(lubridate)
+#library(lubridate)
 #library(plotly)
-source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/to_m.R")
+#source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/to_m.R")
 
 #absolute path to store model objects (useful when scheduling tasks)
 path_model <- "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models"

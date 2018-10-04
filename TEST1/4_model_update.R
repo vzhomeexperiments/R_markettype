@@ -23,9 +23,15 @@ data_initial_path <- "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/TE
 # see script 1_data_selection.R
 # data stored in TEST1/data_initial/macd_ML2.rds
 # Read data from recorded rds file
-macd_ML2 <- read_rds(file.path(data_initial_path, "macd_ML2.rds")) %>% mutate_at("M_T", as.character)
+if(file.exists(file.path(data_initial_path, "macd_ML2.rds"))){
+  macd_ML2 <- read_rds(file.path(data_initial_path, "macd_ML2.rds")) %>% mutate_at("M_T", as.character)
+  # count the data in the table
+  big_data_count <- nrow(macd_ML2)
+}
 
 #### Automatically selected and stored data... ==================================
+# read collected data and aggregate it to previous data, delete collected file
+if(big_data_count < 1000000 && file.exists(file.path(data_update_path, "macd_ai_classified.rds"))){
 macd_ai_classified <- read_rds(file.path(data_update_path, "macd_ai_classified.rds")) %>% 
 # keep the joined data for the next update
   bind_rows(macd_ML2) %>% 
@@ -33,10 +39,9 @@ macd_ai_classified <- read_rds(file.path(data_update_path, "macd_ai_classified.r
   write_rds(file.path(data_initial_path, "macd_ML2.rds"))
 
 # delete the data collected so far
-file.remove(file.path(data_update_path, "macd_ai_classified.rds"))
+file.remove(file.path(data_update_path, "macd_ai_classified.rds")) 
 
-# restore label column as factor
-macd_ML2 <- macd_ai_classified %>% mutate_at("M_T", as.factor)
+}
 #### ============================================================================
 
 # Market Periods
@@ -47,66 +52,70 @@ macd_ML2 <- macd_ai_classified %>% mutate_at("M_T", as.factor)
 # 5. Sideways quiet, RAN
 # 6. Sideways volatile, RAV
 
+### Only execute the following code in case objects macd_ML2 and macd_ai_classified are present
+if(exists("macd_ML2") && exists("macd_ai_classified")){
+  # restore label column as factor
+  macd_ML2 <- macd_ai_classified %>% mutate_at("M_T", as.factor)
+  #### Fitting Deep Learning Net =================================================
+  ## Fit model now:
+  # start h2o virtual machine
+  h2o.init()
+  # load data into h2o environment
+  macd_ML  <- as.h2o(x = macd_ML2, destination_frame = "macd_ML")
+  
+  # fit models from simplest to more complex
+  ModelC <- h2o.deeplearning(
+    model_id = "DL_Classification",
+    x = names(macd_ML[,1:64]), 
+    y = "M_T",
+    training_frame = macd_ML,
+    activation = "Tanh",
+    overwrite_with_best_model = TRUE, 
+    autoencoder = FALSE, 
+    hidden = c(100,100), 
+    loss = "Automatic",
+    sparse = TRUE,
+    l1 = 1e-4,
+    distribution = "AUTO",
+    stopping_metric = "AUTO",
+    #balance_classes = T,
+    epochs = 200)
+  
+  #ModelC
+  summary(ModelC)
+  h2o.performance(ModelC)
+  
+  # to return predicted classes
+  predicted <- h2o.predict(ModelC, macd_ML)  %>% as.data.frame()
+  
+  ## Save the model, include logic to check the previous model and overwrite only if new model is better
+  ### get the previously obtained model object
+  ModelPrev <- try(h2o.loadModel(file.path(path_model, "classification.bin/DL_Classification")),silent = T)
+  # perform comparison only if there is a previous model
+  if(!class(ModelPrev)[1] == "try-error"){
+  # get performance of previously obtained model
+  ModelPrevPerf <- h2o.performance(ModelPrev,newdata = macd_ML) %>% as.list.data.frame()
+  # get mean per class error
+  ModelPrevMeanPerClassError <- ModelPrevPerf@metrics$mean_per_class_error
+  
+  ### get the new model object metricx
+  # get performance of current model
+  ModelCPerf <- h2o.performance(ModelC) %>% as.list.data.frame()
+  # get mean per class error
+  ModelCMeanPerClassError <- ModelCPerf@metrics$mean_per_class_error
+  
+  # compare metrics of both models
+  if(ModelCMeanPerClassError < ModelPrevMeanPerClassError) {
+    # this will save new model if it's metrics are better
+    h2o.saveModel(ModelC, file.path(path_model, "classification.bin"), force = TRUE)
+  }
+    # this will save ModelC in case previous model did not existed
+  } else { h2o.saveModel(ModelC, file.path(path_model, "classification.bin"), force = TRUE) }
+  
+  
+  
+  # shutdown the virtual machine
+  h2o.shutdown(prompt = F)
 
-#### Fitting Deep Learning Net =================================================
-## Fit model now:
-# start h2o virtual machine
-h2o.init()
-# load data into h2o environment
-macd_ML  <- as.h2o(x = macd_ML2, destination_frame = "macd_ML")
-
-# fit models from simplest to more complex
-ModelC <- h2o.deeplearning(
-  model_id = "DL_Classification",
-  x = names(macd_ML[,1:64]), 
-  y = "M_T",
-  training_frame = macd_ML,
-  activation = "Tanh",
-  overwrite_with_best_model = TRUE, 
-  autoencoder = FALSE, 
-  hidden = c(100,100), 
-  loss = "Automatic",
-  sparse = TRUE,
-  l1 = 1e-4,
-  distribution = "AUTO",
-  stopping_metric = "AUTO",
-  #balance_classes = T,
-  epochs = 200)
-
-#ModelC
-summary(ModelC)
-h2o.performance(ModelC)
-
-# to return predicted classes
-predicted <- h2o.predict(ModelC, macd_ML)  %>% as.data.frame()
-
-## Save the model, include logic to check the previous model and overwrite only if new model is better
-### get the previously obtained model object
-ModelPrev <- try(h2o.loadModel(file.path(path_model, "classification.bin/DL_Classification")),silent = T)
-# perform comparison only if there is a previous model
-if(!class(ModelPrev)[1] == "try-error"){
-# get performance of previously obtained model
-ModelPrevPerf <- h2o.performance(ModelPrev,newdata = macd_ML) %>% as.list.data.frame()
-# get mean per class error
-ModelPrevMeanPerClassError <- ModelPrevPerf@metrics$mean_per_class_error
-
-### get the new model object metricx
-# get performance of current model
-ModelCPerf <- h2o.performance(ModelC) %>% as.list.data.frame()
-# get mean per class error
-ModelCMeanPerClassError <- ModelCPerf@metrics$mean_per_class_error
-
-# compare metrics of both models
-if(ModelCMeanPerClassError < ModelPrevMeanPerClassError) {
-  # this will save new model if it's metrics are better
-  h2o.saveModel(ModelC, file.path(path_model, "classification.bin"), force = TRUE)
 }
-  # this will save ModelC in case previous model did not existed
-} else { h2o.saveModel(ModelC, file.path(path_model, "classification.bin"), force = TRUE) }
-
-
-
-# shutdown the virtual machine
-h2o.shutdown(prompt = F)
-
 #### End
