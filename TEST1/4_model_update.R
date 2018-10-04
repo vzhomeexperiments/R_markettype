@@ -81,12 +81,12 @@ if(exists("macd_ML2") && exists("macd_ai_classified")){
     #balance_classes = T,
     epochs = 200)
   
-  #ModelC
-  summary(ModelC)
-  h2o.performance(ModelC)
-  
-  # to return predicted classes
-  predicted <- h2o.predict(ModelC, macd_ML)  %>% as.data.frame()
+  # #ModelC
+  # summary(ModelC)
+  # h2o.performance(ModelC)
+  # 
+  # # to return predicted classes
+  # predicted <- h2o.predict(ModelC, macd_ML)  %>% as.data.frame()
   
   ## Save the model, include logic to check the previous model and overwrite only if new model is better
   ### get the previously obtained model object
