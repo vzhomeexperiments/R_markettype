@@ -29,6 +29,9 @@ if(file.exists(file.path(data_initial_path, "macd_ML2.rds"))){
   big_data_count <- nrow(macd_ML2)
 }
 
+#check data
+summary(as.factor(macd_ML2$M_T))
+
 #### Automatically selected and stored data... ==================================
 # read collected data and aggregate it to previous data, delete collected file
 if(big_data_count < 1000000 && file.exists(file.path(data_update_path, "macd_ai_classified.rds"))){
