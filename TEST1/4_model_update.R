@@ -11,7 +11,8 @@ library(tidyverse)
 library(h2o)
 library(lubridate)
 #library(plotly)
-source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/to_m.R")
+library(lazytrade)
+#source("C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/to_m.R")
 
 #absolute path to store model objects (useful when scheduling tasks)
 path_model <- "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype/models"
@@ -59,6 +60,8 @@ file.remove(file.path(data_update_path, "macd_ai_classified.rds"))
 if(exists("macd_ML2") && exists("macd_ai_classified")){
   # restore label column as factor
   macd_ML2 <- macd_ai_classified %>% mutate_at("M_T", as.factor)
+  # for situations of h2o updates
+  # macd_ML2 <- macd_ML2 %>% mutate_at("M_T", as.factor)
   #### Fitting Deep Learning Net =================================================
   ## Fit model now:
   # start h2o virtual machine
@@ -87,7 +90,9 @@ if(exists("macd_ML2") && exists("macd_ai_classified")){
   # #ModelC
   # summary(ModelC)
   # h2o.performance(ModelC)
-  # 
+  ## execute commented code below after updating h2o
+  # h2o.saveModel(ModelC, file.path(path_model, "classification.bin"), force = TRUE)
+  
   # # to return predicted classes
   # predicted <- h2o.predict(ModelC, macd_ML)  %>% as.data.frame()
   

@@ -11,7 +11,8 @@ library(tidyverse)
 library(h2o)
 library(lubridate)
 library(plotly)
-source("to_m.R")
+library(lazytrade)
+#source("to_m.R")
 
 #### Read asset prices and indicators ==========================================
 # load prices of 28 currencies
