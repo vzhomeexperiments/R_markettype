@@ -51,7 +51,7 @@ macd_df <- macd %>% select(X1, X5) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X5.y, col = X5.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bun1 <- macd_df %>% select(X5.x) %>% to_m(128)
+macd_m_bun1 <- macd_df %>% select(X5.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -70,7 +70,7 @@ macd_df <- macd %>% select(X1, X6) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X6.y, col = X6.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bun2 <- macd_df %>% select(X6.x) %>% to_m(128)
+macd_m_bun2 <- macd_df %>% select(X6.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -89,7 +89,7 @@ macd_df <- macd %>% select(X1, X7) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X7.y, col = X7.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bun3 <- macd_df %>% select(X7.x) %>% to_m(128)
+macd_m_bun3 <- macd_df %>% select(X7.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -108,7 +108,7 @@ macd_df <- macd %>% select(X1, X9) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X9.y, col = X9.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bun4 <- macd_df %>% select(X9.x) %>% to_m(128)
+macd_m_bun4 <- macd_df %>% select(X9.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -127,7 +127,7 @@ macd_df <- macd %>% select(X1, X24) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X24.y, col = X24.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bun5 <- macd_df %>% select(X24.x) %>% to_m(128)
+macd_m_bun5 <- macd_df %>% select(X24.x) %>% to_m(64)
 # --------------------
 
 #########################################################################
@@ -160,7 +160,7 @@ macd_df <- macd %>% select(X1, X6) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X6.y, col = X6.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_buv1 <- macd_df %>% select(X6.x) %>% to_m(128)
+macd_m_buv1 <- macd_df %>% select(X6.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -179,7 +179,7 @@ macd_df <- macd %>% select(X1, X7) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X7.y, col = X7.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_buv2 <- macd_df %>% select(X7.x) %>% to_m(128)
+macd_m_buv2 <- macd_df %>% select(X7.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -198,7 +198,7 @@ macd_df <- macd %>% select(X1, X9) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X9.y, col = X9.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_buv3 <- macd_df %>% select(X9.x) %>% to_m(128)
+macd_m_buv3 <- macd_df %>% select(X9.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -217,7 +217,7 @@ macd_df <- macd %>% select(X1, X11) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X11.y, col = X11.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_buv4 <- macd_df %>% select(X11.x) %>% to_m(128)
+macd_m_buv4 <- macd_df %>% select(X11.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -236,7 +236,7 @@ macd_df <- macd %>% select(X1, X12) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X12.y, col = X12.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_buv5 <- macd_df %>% select(X12.x) %>% to_m(128)
+macd_m_buv5 <- macd_df %>% select(X12.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -255,7 +255,7 @@ macd_df <- macd %>% select(X1, X14) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X14.y, col = X14.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_buv6 <- macd_df %>% select(X14.x) %>% to_m(128)
+macd_m_buv6 <- macd_df %>% select(X14.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -274,7 +274,7 @@ macd_df <- macd %>% select(X1, X14) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X14.y, col = X14.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_buv7 <- macd_df %>% select(X14.x) %>% to_m(128)
+macd_m_buv7 <- macd_df %>% select(X14.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -293,7 +293,7 @@ macd_df <- macd %>% select(X1, X15) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X15.y, col = X15.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_buv8 <- macd_df %>% select(X15.x) %>% to_m(128)
+macd_m_buv8 <- macd_df %>% select(X15.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -312,7 +312,7 @@ macd_df <- macd %>% select(X1, X23) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X23.y, col = X23.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_buv9 <- macd_df %>% select(X23.x) %>% to_m(128)
+macd_m_buv9 <- macd_df %>% select(X23.x) %>% to_m(64)
 # --------------------
 
 #########################################################################
@@ -348,7 +348,7 @@ macd_df <- macd %>% select(X1, X3) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X3.y, col = X3.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_ben1 <- macd_df %>% select(X3.x) %>% to_m(128)
+macd_m_ben1 <- macd_df %>% select(X3.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -367,7 +367,7 @@ macd_df <- macd %>% select(X1, X5) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X5.y, col = X5.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_ben2 <- macd_df %>% select(X5.x) %>% to_m(128)
+macd_m_ben2 <- macd_df %>% select(X5.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -386,7 +386,7 @@ macd_df <- macd %>% select(X1, X10) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X10.y, col = X10.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_ben3 <- macd_df %>% select(X10.x) %>% to_m(128)
+macd_m_ben3 <- macd_df %>% select(X10.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -405,7 +405,7 @@ macd_df <- macd %>% select(X1, X11) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X11.y, col = X11.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_ben4 <- macd_df %>% select(X11.x) %>% to_m(128)
+macd_m_ben4 <- macd_df %>% select(X11.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -424,7 +424,7 @@ macd_df <- macd %>% select(X1, X17) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X17.y, col = X17.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_ben5 <- macd_df %>% select(X17.x) %>% to_m(128)
+macd_m_ben5 <- macd_df %>% select(X17.x) %>% to_m(64)
 # --------------------
 
 #########################################################################
@@ -457,7 +457,7 @@ macd_df <- macd %>% select(X1, X2) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X2.y, col = X2.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bev1 <- macd_df %>% select(X2.x) %>% to_m(128)
+macd_m_bev1 <- macd_df %>% select(X2.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -476,7 +476,7 @@ macd_df <- macd %>% select(X1, X3) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X3.y, col = X3.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bev2 <- macd_df %>% select(X3.x) %>% to_m(128)
+macd_m_bev2 <- macd_df %>% select(X3.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -495,7 +495,7 @@ macd_df <- macd %>% select(X1, X11) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X11.y, col = X11.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bev3 <- macd_df %>% select(X11.x) %>% to_m(128)
+macd_m_bev3 <- macd_df %>% select(X11.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -514,7 +514,7 @@ macd_df <- macd %>% select(X1, X12) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X12.y, col = X12.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bev4 <- macd_df %>% select(X12.x) %>% to_m(128)
+macd_m_bev4 <- macd_df %>% select(X12.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -533,7 +533,7 @@ macd_df <- macd %>% select(X1, X13) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X13.y, col = X13.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bev5 <- macd_df %>% select(X13.x) %>% to_m(128)
+macd_m_bev5 <- macd_df %>% select(X13.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -552,7 +552,7 @@ macd_df <- macd %>% select(X1, X16) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X16.y, col = X16.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bev6 <- macd_df %>% select(X16.x) %>% to_m(128)
+macd_m_bev6 <- macd_df %>% select(X16.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -571,7 +571,7 @@ macd_df <- macd %>% select(X1, X24) %>% inner_join(price_df, by = c("X1" = "X1")
 ggplot(macd_df, aes(X1, X24.y, col = X24.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_bev7 <- macd_df %>% select(X24.x) %>% to_m(128)
+macd_m_bev7 <- macd_df %>% select(X24.x) %>% to_m(64)
 # --------------------
 #########################################################################
 macd_m_bev1 <- transform(macd_m_bev1, M_T = "BEV")
@@ -604,7 +604,7 @@ macd_df <- macd %>% select(X1, X2) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X2.y, col = X2.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_ran1 <- macd_df %>% select(X2.x) %>% to_m(128)
+macd_m_ran1 <- macd_df %>% select(X2.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -623,7 +623,7 @@ macd_df <- macd %>% select(X1, X4) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X4.y, col = X4.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_ran2 <- macd_df %>% select(X4.x) %>% to_m(128)
+macd_m_ran2 <- macd_df %>% select(X4.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -642,7 +642,7 @@ macd_df <- macd %>% select(X1, X9) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X9.y, col = X9.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_ran3 <- macd_df %>% select(X9.x) %>% to_m(128)
+macd_m_ran3 <- macd_df %>% select(X9.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -661,7 +661,7 @@ macd_df <- macd %>% select(X1, X9) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X9.y, col = X9.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_ran3 <- macd_df %>% select(X9.x) %>% to_m(128)
+macd_m_ran3 <- macd_df %>% select(X9.x) %>% to_m(64)
 # --------------------
 #########################################################################
 macd_m_ran1 <- transform(macd_m_ran1, M_T = "RAN") 
@@ -689,7 +689,7 @@ macd_df <- macd %>% select(X1, X2) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X2.y, col = X2.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_rav1 <- macd_df %>% select(X2.x) %>% to_m(128)
+macd_m_rav1 <- macd_df %>% select(X2.x) %>% to_m(64)
 # --------------------
 # --------------------
 # Choose the asset corresponding to this period /find by replacing 'y' argument/
@@ -708,7 +708,7 @@ macd_df <- macd %>% select(X1, X9) %>% inner_join(price_df, by = c("X1" = "X1"))
 ggplot(macd_df, aes(X1, X9.y, col = X9.x))+geom_line()
 
 # transform to matrix, number of columns will correspond to model sensitivity e.g. 100 columns ~ 24 Hours
-macd_m_rav2 <- macd_df %>% select(X9.x) %>% to_m(128)
+macd_m_rav2 <- macd_df %>% select(X9.x) %>% to_m(64)
 # --------------------
 
 #########################################################################
@@ -732,6 +732,6 @@ macd_ML2 <- rbind(macd_m_bun1,macd_m_bun2,macd_m_bun3,macd_m_bun4,macd_m_bun5,
 write_rds(macd_ML2, "PROD1/data_initial/macd_ML2.rds")
 
 ## Visualize new matrix in 3D
-plot_ly(z = as.matrix(macd_ML2[,1:128]), type = "surface")
+plot_ly(z = as.matrix(macd_ML2[,1:64]), type = "surface")
 
 #### End
