@@ -19,8 +19,8 @@ path_user <- "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype"
 path_sbx <-  "C:/Program Files (x86)/FxPro - Terminal2/MQL4/Files"
 
 path_sbxm <- "C:/Program Files (x86)/FxPro - Terminal1/MQL4/Files"
+path_sbxd <- "C:/Program Files (x86)/FxPro - Terminal2/MQL4/Files" #development terminal
 path_sbxs <- "C:/Program Files (x86)/FxPro - Terminal3/MQL4/Files"
-
 # Define variables for the functions to work
 chart_period <- 60 #this variable will define market type period
 num_cols <- 64
@@ -95,6 +95,7 @@ for (PAIR in Pairs) {
   # Write obtained result to the sandboxes
   write_csv(my_market, file.path(path_sbx, paste0("AI_MarketType_", PAIR, chart_period, ".csv")))
   write_csv(my_market, file.path(path_sbxm,  paste0("AI_MarketType_", PAIR, chart_period, ".csv")))
+  write_csv(my_market, file.path(path_sbxd,  paste0("AI_MarketType_", PAIR, chart_period, ".csv")))
   write_csv(my_market, file.path(path_sbxs,  paste0("AI_MarketType_", PAIR, chart_period, ".csv")))
 
 }
