@@ -64,13 +64,14 @@ for (PAIR in Pairs) {
   # Extract one column with Indicator data for 1 pair (e.g. "EURUSD")
   df <- macd_100 %>% select(PAIR)
   # Use function to score the data to the model
-  my_market_prediction <- evaluate_market_type(x = df,
-                                               path_model = path_model,
-                                               num_cols = num_cols) 
+  my_market_prediction <- mt_evaluate(x = df,
+                                      path_model = path_model,
+                                      num_cols = num_cols,
+                                      timeframe = 60) 
   # predicted value to write
   my_market <- my_market_prediction  %>% select(predict)
   
-  # Join data to the predicted class and save to the temporary dataframe, only if predicted confidence is higher than 0.95
+  # Join data to the predicted class and save to the temporary dataframe, only if predicted confidence is higher than 0.96
   # get predicted confidence
   my_market_conf <- my_market_prediction %>% select(-1) %>% select(which.max(.))
   # write dataframe to the temporary dataframe

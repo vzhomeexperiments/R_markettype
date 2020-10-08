@@ -16,7 +16,9 @@ library(lazytrade)
 #path to user repo:
 #!!!Change this path!!! 
 path_user <- "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype"
+#!!!Change this path!!!
 
+chart_period <- 60 
 #!!!Execute code below line by line
 
 #absolute path to store model objects (useful when scheduling tasks)
@@ -40,7 +42,14 @@ data(macd_ML2)
 # 6. Sideways volatile, RAV
 
 # write data to the _DATA folder
-macd_ML2 %>% write_rds(file.path(path_data, "macd_ML2.rds"))
+if(!file.exists(file.path(path_data, "macd_ML2.rds")))
+  {
+   #write sample file 
+   macd_ML2 %>% write_rds(file.path(path_data, "macd_ML2.rds"))
+} else {
+  #read existing file 
+  macd_ML2 <- read_rds(file.path(path_data, "macd_ML2.rds"))
+  }
 
 #### Fitting Deep Learning Net =================================================
 # start h2o virtual machine
@@ -48,8 +57,10 @@ h2o.init()
 
 # use function from the lazytrade package:
 macd_ML2 %>% mt_make_model(num_bars = 64,
+                           timeframe = chart_period,
                            path_model = path_model,
-                           path_data = path_data)
+                           path_data = path_data,
+                           activate_balance = TRUE)
 
 # shutdown the virtual machine
 h2o.shutdown(prompt = F)
