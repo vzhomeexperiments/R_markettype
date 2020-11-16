@@ -63,6 +63,12 @@ for (PAIR in Pairs) {
   # PAIR <- "EURGBP"
   # Extract one column with Indicator data for 1 pair (e.g. "EURUSD")
   df <- macd_100 %>% select(PAIR)
+
+  #normalize macd value if we are dealing with JPY pairs
+  if(stringr::str_detect(names(df), 'JPY')){
+    df <- df/100
+  }
+  
   # Use function to score the data to the model
   my_market_prediction <- mt_evaluate(x = df,
                                       path_model = path_model,
