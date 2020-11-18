@@ -728,9 +728,9 @@ macd_ML2 <- rbind(macd_m_bun1,macd_m_bun2,macd_m_bun3,macd_m_bun4,macd_m_bun5,
 ### NOTE Number of rows Matrices needs to be roughly equal
 
 # Optionally record data into the folder
-if(!dir.exists(file.path(getwd(),"_INFO/data_initial"))){
-  dir.create(file.path(getwd(),"_INFO/data_initial"))
-  write_rds(macd_ML2, file.path(getwd(),"_INFO/data_initial", "macd_ML2.rds"))
+if(!dir.exists(file.path(getwd(),"_DATA/data_initial"))){
+  dir.create(file.path(getwd(),"_DATA/data_initial"))
+  write_rds(macd_ML2, file.path(getwd(),"_DATA/data_initial", "macd_ML2.rds"))
 }
   
 

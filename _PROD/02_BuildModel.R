@@ -31,7 +31,7 @@ if(!dir.exists(path_data)){dir.create(path_data)}
 
 #### Manually Selected data... =================================================
 # data stored in the lazytrade package
-data(macd_ML2)
+data("macd_ML60M")
 
 # Market Periods
 # 1. Bull normal, BUN
@@ -42,13 +42,13 @@ data(macd_ML2)
 # 6. Sideways volatile, RAV
 
 # write data to the _DATA folder
-if(!file.exists(file.path(path_data, "macd_ML2.rds")))
+if(!file.exists(file.path(path_data, "macd_ML60M.rds")))
   {
    #write sample file 
-   macd_ML2 %>% write_rds(file.path(path_data, "macd_ML2.rds"))
+   macd_ML60M %>% write_rds(file.path(path_data, "macd_ML60M.rds"))
 } else {
   #read existing file 
-  macd_ML2 <- read_rds(file.path(path_data, "macd_ML2.rds"))
+  macd_ML60M <- read_rds(file.path(path_data, "macd_ML60M.rds"))
   }
 
 #### Fitting Deep Learning Net =================================================
@@ -56,11 +56,12 @@ if(!file.exists(file.path(path_data, "macd_ML2.rds")))
 h2o.init()
 
 # use function from the lazytrade package:
-macd_ML2 %>% mt_make_model(num_bars = 64,
+macd_ML60M %>% mt_make_model(num_bars = 64,
                            timeframe = chart_period,
                            path_model = path_model,
                            path_data = path_data,
-                           activate_balance = TRUE)
+                           activate_balance = TRUE,num_nn_options = 48
+                            )
 
 # shutdown the virtual machine
 h2o.shutdown(prompt = F)
