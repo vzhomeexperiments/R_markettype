@@ -48,7 +48,9 @@ macd <- read_csv(sbx_macd, col_names = F, col_types = "cdddddddddddddddddddddddd
 macd$X1 <- ymd_hms(macd$X1)
 
 # Prepare data frame with last 64 observations of all 28 pairs and remove date/time column (16 hours)
-macd_100 <- macd %>% select(c(X2:X29)) %>% head(num_cols)
+# macd_100 <- macd %>% select(c(X2:X29)) %>% head(num_cols)
+# Prepare data frame with last 64 observations of all 28 pairs and remove date/time column (16 hours)
+macd_100 <- macd %>% select(-X1) %>% head(num_cols)
 
 # Rename the columns
 names(macd_100) <- Pairs
