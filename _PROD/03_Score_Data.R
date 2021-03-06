@@ -11,16 +11,17 @@ library(h2o)
 library(lazytrade)
 
 #path to user repo:
-#!!!Change this path!!! 
-path_user <- "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype"
+#!!!Setup Environmental Variables!!! 
+path_user <- normalizePath(Sys.getenv('PATH_DSS_Repo'), winslash = '/')
+path_user <- file.path(path_user, "R_markettype")
 
 # Defining variables to be re-used in the code
-#!!!Change this path!!! 
-path_sbx <-  "C:/Program Files (x86)/FxPro - Terminal2/MQL4/Files"
+#!!!Setup Environmental Variables!!! 
+path_sbx <-  normalizePath(Sys.getenv('PATH_T2'), winslash = '/')
 
-path_sbxm <- "C:/Program Files (x86)/FxPro - Terminal1/MQL4/Files"
-path_sbxd <- "C:/Program Files (x86)/FxPro - Terminal2/MQL4/Files" #development terminal
-path_sbxs <- "C:/Program Files (x86)/FxPro - Terminal3/MQL4/Files"
+path_sbxm <- normalizePath(Sys.getenv('PATH_T1'), winslash = '/')
+path_sbxd <- normalizePath(Sys.getenv('PATH_T2'), winslash = '/') #development terminal
+path_sbxs <- normalizePath(Sys.getenv('PATH_T3'), winslash = '/')
 # Define variables for the functions to work
 chart_period <- 60 #this variable will define market type period
 num_cols <- 64

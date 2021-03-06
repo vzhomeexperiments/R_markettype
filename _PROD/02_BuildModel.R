@@ -14,9 +14,9 @@ library(h2o)
 library(lazytrade)
 
 #path to user repo:
-#!!!Change this path!!! 
-path_user <- "C:/Users/fxtrams/Documents/000_TradingRepo/R_markettype"
-#!!!Change this path!!!
+#!!!Setup Environmental Variables!!! 
+path_user <- normalizePath(Sys.getenv('PATH_DSS_Repo'), winslash = '/')
+path_user <- file.path(path_user, "R_markettype")
 
 chart_period <- 60 
 #!!!Execute code below line by line
@@ -53,7 +53,7 @@ if(!file.exists(file.path(path_data, "macd_ML60M.rds")))
 
 #### Fitting Deep Learning Net =================================================
 # start h2o virtual machine
-h2o.init()
+h2o.init(nthreads = 2)
 
 # use function from the lazytrade package:
 macd_ML60M %>% mt_make_model(num_bars = 64,
